@@ -49,6 +49,11 @@ npm run generate -- hr24b   # 하나만
 | `filter-drier` | 수직 드라이어 (위 입구) | `x, y, zBot, zTop, diameter, inletOd, outletOd` | `in`, `out` |
 | `axial-fan` | 축류팬 (축은 Y 방향) | `center`, `shroud`, `motor`, `hub`, `blades`, `rpm` | – |
 | `hose` | 배수호스 등 냉매가 아닌 관 | `path`, `od`, `bendRadius` | – |
+| `cad-part` | 가져온 CAD 형상 (STEP·IGES·STL·OBJ) | `file`(파일 이름), `transform: {translate, rotateDeg, scale}`, `ports: {이름: [x,y,z]}`(CAD 원본 좌표), `obstacle`(기본 true) | `ports`에 적은 이름 |
+
+압축기는 `"model": "secop-nle15kk4"`처럼 카탈로그(`generator/catalog.mjs`) 모델을 지정하면 쉘 크기, 받침 구멍 간격, 연결관 굵기와 높이를 데이터시트 값으로 채웁니다. `shell`·`base`·`stubs`를 직접 적으면 그 값이 우선합니다.
+
+`cad-part`의 파일은 명령줄 생성(`npm run generate`)에서는 `specs/cad/` 폴더에서, 편집기에서는 "CAD 불러오기"로 연 파일(브라우저에 보관)에서 읽습니다. 배관이 없는 CAD 전용 모델은 `"circuit": []`로 둡니다.
 
 새 부품 종류는 `generator/builders.mjs`에 함수를 추가하고 `BUILDERS`에 등록합니다.
 

@@ -27,6 +27,10 @@ T-19-HC 사양서는 외형 치수(사양서 2쪽), 하부 응축 유닛, R290�
 
 `/new`(새로 만들기)는 `generator/templates.mjs`의 형태 템플릿으로 사양서를 만든다. 언더카운터·후면 응축기(HR24B 규칙)와 리치인·하부 응축 유닛(T-19-HC 규칙) 두 형태가 있고, 폭·깊이·높이·발 높이·냉매·선반 수만 입력한다. 벽 두께, 부품 위치와 크기는 외형 치수에서 규칙으로 계산하고, 연결 배관은 포트 기준 점과 자동 경로로 잇는다. 입력 범위의 모서리 값 조합(형태당 16가지)과 기본값을 `tests/templates.mjs`가 검사한다.
 
+부품 카탈로그(`generator/catalog.mjs`)에는 압축기 12종이 있다. 일반형 2종(HR24B·T-19-HC 재구성에 쓴 값)과 제조사 데이터시트에서 확인한 10종(Secop NLE15KK.4·NLU10KK.1·NLE10CN·SC12CNX.2·NL7F, Embraco EMX70CLC·NEK6152U·NEK6181U·NEU2155U·NEK6210Z)이다. 항목마다 데이터시트 URL과 쪽을 적었다. 데이터시트의 연결관 치수는 안지름이므로 모델의 연결관 바깥지름은 안지름+1.2mm로 그렸고, Embraco 시트에 없는 연결관 높이는 일반값을 쓴다. 전체 길이에 전기 커버가 포함된 모델은 쉘 길이를 따로 적었다. 마법사와 편집기에서 냉매에 맞는 모델을 고를 수 있고, 형태 템플릿은 압축기 높이에 맞춰 기계실 높이를 늘린다.
+
+CAD 가져오기(`generator/cad.mjs`)는 STEP·IGES를 occt-import-js(OpenCascade WebAssembly, LGPL-2.1)로, STL·OBJ를 three.js 로더로 읽어 `cad-part` 부품을 만든다. 위치·회전·배율과 배관 연결점(포트)을 지정할 수 있고, 자동 배관은 CAD 부품의 외곽 상자를 피한다. 편집기에서는 파일을 브라우저의 IndexedDB에만 보관한다. `tests/cad.mjs`가 STEP 읽기·회전 배치, STL 블록 사이 자동 배관, 파일 누락 오류를 검사한다.
+
 배관 자동 경로(`generator/router.mjs`)는 축 방향 격자 위 A* 탐색이다. 격자에는 시작·끝 좌표가 항상 포함되며, 연결되지 않은 부품·다른 배관·외함 밖을 피하고 식품 칸(`keepOut`)은 벌점을 주어 되도록 지나지 않는다.
 
 `/editor`(사양서 편집기)는 같은 생성기를 브라우저에서 실행한다. 부품이나 배관을 고르면 사양서 항목이 입력칸으로 나오고, 값을 바꾸면 0.25초 뒤 3D와 검사 결과가 갱신된다(생성 약 0.1초). 검사에 걸린 부품·배관은 목록에 빨간 점으로 표시한다. 되돌리기, 배관 경유점 추가·삭제, JSON 직접 편집, 사양서 JSON 열기·저장, OBJ 저장을 지원한다. "도면 맞춤 (2D)" 화면은 모델을 정면·후면·측면·평면으로 투영해 부품 상자와 배관을 그린다. 사용자의 도면(그림 또는 PDF의 한 쪽, PDF.js로 브라우저에서 렌더)을 배경에 깔고, 끌기·휠로 외함 윤곽에 맞추거나 길이를 아는 두 점을 찍어 축척을 맞춘 뒤, 부품 상자를 도면 위치로 끌면 `generator/transform.mjs`가 그 부품의 모든 좌표를 같은 거리만큼 옮긴다. 도면 파일은 서버로 보내지 않고 저장하지도 않는다. 작업 중인 사양서는 기준 모델별로 브라우저 localStorage에 자동 저장되며 서버로 보내지 않는다. 부품 추가·삭제는 JSON 직접 편집으로 한다.
@@ -133,7 +137,7 @@ T-19-HC 사양서는 외형 치수(사양서 2쪽), 하부 응축 유닛, R290�
 ## 검증
 
 ```bash
-npm test          # 7개 검증 스크립트
+npm test          # 8개 검증 스크립트
 npm run lint
 npx tsc --noEmit
 npm run build
@@ -146,7 +150,8 @@ npm run build
 | `tests/circuit-properties.mjs` | T-19-HC: 40개 운전점 PH 물성, 상변화, 구간 연속성 |
 | `tests/piping.mjs` | T-19-HC: 닫힌 회로, 포트 좌표, 길이·관경 |
 | `tests/hr24.mjs` | HR24B: 도면 배치, 압축기 크기, 회로 순서·연결, 관경, 배관 간격, 메쉬 |
-| `tests/templates.mjs` | 형태 템플릿: 기본값과 치수 범위 양 끝 조합, 선반 1·6개가 모두 검사 통과, 범위 밖 입력 거부 |
+| `tests/templates.mjs` | 형태 템플릿: 기본값과 치수 범위 양 끝 조합, 선반 1·6개, 카탈로그 압축기 12종 모두 검사 통과, 범위 밖 입력·냉매 불일치 거부 |
+| `tests/cad.mjs` | CAD: STEP 읽기와 회전 배치, CAD 부품 포트 사이 자동 배관과 이동 후 재배관, 파일 누락 오류 |
 | `tests/models.mjs` | 생성기: 모든 사양서 생성·검사 통과, 커밋된 결과가 최신인지, T-19-HC 하부 배치, 자동 경로와 부품 이동 시 배관 추종, 잘못된 사양서 8종 거부 |
 
 ## 출처
@@ -156,3 +161,5 @@ npm run build
 - https://github.com/wireviz/WireViz
 - https://www.kicad.org/
 - https://threejs.org/
+- https://github.com/kovacsv/occt-import-js (LGPL-2.1)
+- https://mozilla.github.io/pdf.js/ (Apache-2.0)

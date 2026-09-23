@@ -2,6 +2,8 @@
 // {parts:[...], ports:{name: Vector3}, path?: [Vector3], inside?: (p) => boolean}.
 // Sub-elements (base, stubs, relay, bracket, wires, tray, rotor) accept {id, name, notes, basis, color} overrides.
 import {T, V, P, box, boxOf, cyl, mergeMesh, subtractBox} from './geometry.mjs';
+import {resolveCompressor} from './catalog.mjs';
+import {cadMatrix} from './cad.mjs';
 
 function part(owner, sub, defaults, geometry, extra = {}) {
   const o = {...defaults, ...(sub || {})};
@@ -37,7 +39,8 @@ export function wireShelves(c) {
 // ---------- hermetic reciprocating compressor ----------
 // Reference profile (radius, height) of a two-piece welded shell, scaled to shell.width × shell.height.
 const PROFILE = [[0, 0], [55, 0], [75, 3], [88, 12], [94, 28], [96, 50], [96, 68], [99, 70], [99, 76], [96, 78], [95, 100], [91, 125], [82, 148], [66, 165], [42, 174], [0, 177]];
-export function hermeticCompressor(c) {
+export function hermeticCompressor(spec) {
+  const c = resolveCompressor(spec);
   const [cx, cy] = c.center, sx = c.shell.width / 2 / 99, sz = c.shell.height / 177, ell = c.shell.depth / c.shell.width;
   const profile = PROFILE.map(([r, h]) => [r * sx, h * sz]);
   const b = c.base, shellBase = c.floorZ + b.plateThickness + b.grommetHeight;
@@ -159,9 +162,27 @@ export function hose(c, {fillet, sweep}) {
   return {parts: [main(c, sweep(pts, c.od / 2, 12), 0xe4e8e6)], ports: {}};
 }
 
+// ---------- imported CAD part (STEP/IGES/STL/OBJ), file contents supplied by the caller ----------
+export function cadPart(c, {cad}) {
+  const file = cad?.[c.file];
+  if (!file) throw new Error(`CAD 파일 "${c.file}"이 없습니다. 편집기에서 "CAD 불러오기"로 열거나 specs/cad/ 폴더에 두세요.`);
+  const m = cadMatrix(c), geo = [];
+  for (const mesh of file.meshes) {
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(mesh.positions, 3));
+    g.setIndex(mesh.indices);
+    geo.push(g.applyMatrix4(m));
+  }
+  const merged = mergeMesh(geo);
+  merged.computeBoundingBox();
+  const b = merged.boundingBox, bounds = {x: [b.min.x, b.max.x], y: [b.min.y, b.max.y], z: [b.min.z, b.max.z]};
+  const ports = Object.fromEntries(Object.entries(c.ports ?? {}).map(([k, p]) => [k, P(p).applyMatrix4(m)]));
+  return {parts: [main(c, merged, 0x9aa7ad, {group: c.group})], ports, ...(c.obstacle === false ? {} : {obstacles: [bounds]}), cadBounds: bounds};
+}
+
 export const BUILDERS = {
   'cabinet': cabinet, 'primitives': primitives, 'wire-shelves': wireShelves,
   'hermetic-compressor': hermeticCompressor, 'condensate-pan': condensatePan,
   'wire-on-tube-condenser': wireOnTubeCondenser, 'fin-tube-coil': finTubeCoil,
-  'filter-drier': filterDrier, 'axial-fan': axialFan, 'hose': hose,
+  'filter-drier': filterDrier, 'axial-fan': axialFan, 'hose': hose, 'cad-part': cadPart,
 };

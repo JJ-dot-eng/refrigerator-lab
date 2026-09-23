@@ -61,6 +61,20 @@ export function routePath(start, end, opts) {
     for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) for (let k = k0; k <= k1; k++) arr[idx(i, j, k)] = 1;
   };
   for (const b of obstacles) mark(blocked, b);
+  // Steps between neighbouring nodes must not jump over obstacles thinner than the grid pitch:
+  // edge[a][cell] = 1 when moving from `cell` one line up along axis a crosses an obstacle.
+  const edge = [0, 1, 2].map(() => new Uint8Array(cells));
+  for (const b of obstacles) for (const a of [0, 1, 2]) {
+    const r = keys.map((k, ax) => ax === a ? null : range(ax, b[k][0], b[k][1]));
+    const [lo, hi] = b[keys[a]];
+    for (let i = 0; i < n[a] - 1; i++) {
+      if (!(lines[a][i] < hi && lines[a][i + 1] > lo)) continue;
+      const [o1, o2] = [0, 1, 2].filter(x => x !== a);
+      for (let u = r[o1][0]; u <= r[o1][1]; u++) for (let w = r[o2][0]; w <= r[o2][1]; w++) {
+        const c = [0, 0, 0]; c[a] = i; c[o1] = u; c[o2] = w; edge[a][idx(...c)] = 1;
+      }
+    }
+  }
   for (const b of soft) mark(costly, b);
 
   const s = keys.map((_, a) => lines[a].indexOf(start.getComponent(a))), e = keys.map((_, a) => lines[a].indexOf(end.getComponent(a)));
@@ -70,6 +84,8 @@ export function routePath(start, end, opts) {
         for (let k = Math.max(0, c[2] - escape); k <= Math.min(n[2] - 1, c[2] + escape); k++) blocked[idx(i, j, k)] = 0;
   };
   open(s); open(e);
+  // Inside an escape zone the edges are free too (a port may sit right next to its own part).
+  const isOpen = c => { const [i, j, k] = unpack(c); return [s, e].some(q => Math.abs(i - q[0]) <= escape && Math.abs(j - q[1]) <= escape && Math.abs(k - q[2]) <= escape); };
 
   // State = cell * 7 + incoming direction (6 = none, at the start). Costs are in grid-pitch units.
   const cost = new Float32Array(cells * 7).fill(Infinity), parent = new Int32Array(cells * 7).fill(-1);
@@ -88,6 +104,8 @@ export function routePath(start, end, opts) {
       if (nb.some((v, a) => v < 0 || v >= n[a])) continue;
       const nc = idx(...nb);
       if (blocked[nc]) continue;
+      const ax = d >> 1, lower = d & 1 ? nc : cell;          // edge is stored on the lower node
+      if (edge[ax][lower] && !(isOpen(cell) && isOpen(nc))) continue;
       const a = d >> 1, step = Math.abs(lines[a][nb[a]] - lines[a][c3[a]]) / g;
       const c = base + step * (costly[nc] ? softCost : 1) + (dir !== 6 && d !== dir ? bendCost : 0), ns = nc * 7 + d;
       if (c < cost[ns]) { cost[ns] = c; parent[ns] = st; heap.push(c + h(...nb), ns); }

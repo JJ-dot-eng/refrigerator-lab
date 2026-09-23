@@ -6,10 +6,11 @@ import {useRouter} from 'next/navigation';
 import ModelScene,{type SceneData} from '@/components/model-scene';
 import {build,toObj} from '@/generator/build.mjs';
 import {TEMPLATES,defaults,fromTemplate} from '@/generator/templates.mjs';
+import {COMPRESSORS} from '@/generator/catalog.mjs';
 import {WIZARD_KEY,WIZARD_BASE,draftKey} from '@/lib/storage-keys';
 import '../hr24/style.css';
 import '../editor/editor.css';
-type Param={key:string;label:string;unit?:string;min?:number;max?:number;step?:number;type?:string;options?:string[]};
+type Param={key:string;label:string;unit?:string;min?:number;max?:number;step?:number;type?:string;options?:string[];optionLabels?:Record<string,string>};
 type Result={errors:string[];model?:SceneData['model'];routes?:SceneData['routes'];verification?:{failures:string[];overallWithHandleMm:{width:number;depth:number;height:number};partCount:number}};
 const TEMPLATE_IDS=Object.keys(TEMPLATES);
 function download(name:string,text:string,type:string){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
@@ -23,6 +24,10 @@ export default function NewModelPage(){
  // Rebuild 300 ms after the last change.
  useEffect(()=>{const timer=setTimeout(()=>{try{const spec=fromTemplate(tid,input);const out=build(spec) as Result;setInputError('');setResult(out);if(out.model&&out.routes)setScene({model:out.model,routes:out.routes});}
   catch(e){setInputError((e as Error).message);}},300);return()=>clearTimeout(timer);},[tid,input]);
+ // Changing the refrigerant switches to a compressor built for it.
+ function setField(key:string,value:string){const next={...input,[key]:value};
+  if(key==='refrigerant'&&COMPRESSORS.find(c=>c.id===input.compressor)?.refrigerant!==value){const c=COMPRESSORS.find(x=>x.refrigerant===value);if(c)next.compressor=c.id;}
+  setInput(next);}
  const pick=(id:string)=>{setTid(id);setInput(defaults(id));setScene(null);setResult(null);};
  const problems=result?[...result.errors,...(result.verification?.failures??[])]:[];
  const v=result?.verification;
@@ -37,7 +42,7 @@ export default function NewModelPage(){
   <h2 style={{marginTop:20}}>2. 치수·사양</h2>
   <div className="nw-form">{params.map(q=><label key={q.key} className="nw-field"><span>{q.label}{q.unit&&q.unit!=='개'?` (${q.unit})`:''}</span>
    {q.type==='text'?<input type="text" value={String(input[q.key]??'')} onChange={e=>setInput({...input,[q.key]:e.target.value})}/>
-   :q.type==='select'?<select value={String(input[q.key])} onChange={e=>setInput({...input,[q.key]:e.target.value})}>{q.options!.map(o=><option key={o}>{o}</option>)}</select>
+   :q.type==='select'?<select value={String(input[q.key])} onChange={e=>setField(q.key,e.target.value)}>{q.options!.filter(o=>q.key!=='compressor'||COMPRESSORS.find(c=>c.id===o)?.refrigerant===input.refrigerant).map(o=><option key={o} value={o}>{q.optionLabels?.[o]??o}</option>)}</select>
    :<><input type="number" min={q.min} max={q.max} step={q.step??.1} value={Number(input[q.key])} onChange={e=>{const n=Number(e.target.value);if(e.target.value!==''&&Number.isFinite(n))setInput({...input,[q.key]:n});}}/><small>{q.min}~{q.max}</small></>}
   </label>)}</div>
   <button className="ed-link" onClick={()=>setInput(defaults(tid))}>기본값으로</button>

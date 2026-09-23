@@ -20,6 +20,7 @@ const MOVERS = {
   'filter-drier': (c, d) => ({...c, x: r2(c.x + d[0]), y: r2(c.y + d[1]), zBot: r2(c.zBot + d[2]), zTop: r2(c.zTop + d[2])}),
   'axial-fan': (c, d) => ({...c, center: point(c.center, d)}),
   'hose': (c, d) => ({...c, path: c.path.map(p => point(p, d))}),
+  'cad-part': (c, d) => ({...c, transform: {...c.transform, translate: point(c.transform?.translate ?? [0, 0, 0], d)}}),
 };
 
 export function translateComponent(c, d) {

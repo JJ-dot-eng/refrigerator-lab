@@ -9,6 +9,7 @@
     "height": 2005.01
   },
   "circuitClosed": true,
+  "hasCircuit": true,
   "pipeClearanceMm": {
     "discharge|condenser": 22.6,
     "discharge|liquid_line": 10,

@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import {build} from '../generator/build.mjs';
 import {TEMPLATES, fromTemplate} from '../generator/templates.mjs';
+import {COMPRESSORS} from '../generator/catalog.mjs';
 
 let count = 0;
 for (const [id, t] of Object.entries(TEMPLATES)) {
@@ -22,4 +23,15 @@ for (const [id, t] of Object.entries(TEMPLATES)) {
   assert.throws(() => fromTemplate(id, {width: 10}), /폭은\(는\)/);
 }
 assert.throws(() => fromTemplate('igloo', {}), /알 수 없는 형태/);
-console.log(`Templates: ${count} size variants of ${Object.keys(TEMPLATES).length} layouts build with closed circuits and no interference; out-of-range input refused.`);
+
+// Every catalogue compressor fits both layouts at their smallest width (compartment grows if needed).
+for (const [id, t] of Object.entries(TEMPLATES)) for (const c of COMPRESSORS) {
+  const width = t.params.find(p => p.key === 'width').min;
+  for (const input of [{compressor: c.id, refrigerant: c.refrigerant}, {compressor: c.id, refrigerant: c.refrigerant, width}]) {
+    const out = build(fromTemplate(id, input)), tag = `${id} + ${c.id} ${JSON.stringify(input)}`;
+    assert.deepEqual([out.errors, out.verification.failures], [[], []], tag);
+    count++;
+  }
+}
+assert.throws(() => fromTemplate('undercounter-rear', {compressor: 'secop-nle10cn', refrigerant: 'R600a'}), /냉매\(R290\)/);
+console.log(`Templates: ${count} size/compressor variants of ${Object.keys(TEMPLATES).length} layouts (${COMPRESSORS.length} catalogue compressors) build with closed circuits and no interference; out-of-range input refused.`);

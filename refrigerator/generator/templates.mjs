@@ -3,6 +3,8 @@
 // reach-in) and are expressed relative to the outer envelope, so other sizes follow.
 // Connecting pipes use port-anchored points and {"auto": {}} sections, so they adapt too.
 
+import {COMPRESSORS, findCompressor, compressorParams} from './catalog.mjs';
+
 const r2 = v => Math.round(v * 100) / 100;
 const box = (x, y, z) => ({x: x.map(r2), y: y.map(r2), z: z.map(r2)});
 const pt = (...a) => a.map(r2);
@@ -19,18 +21,24 @@ const COMMON_PARAMS = [
   {key: 'model', label: '모델명', type: 'text', default: '새 냉장고'},
   {key: 'refrigerant', label: '냉매', type: 'select', options: ['R600a', 'R290', 'R134a'], default: 'R600a'},
   {key: 'shelves', label: '선반 수', unit: '개', min: 1, max: 6, step: 1},
+  {key: 'compressor', label: '압축기', type: 'select', options: COMPRESSORS.map(c => c.id),
+    optionLabels: Object.fromEntries(COMPRESSORS.map(c => [c.id, `${c.manufacturer} ${c.model} · ${c.refrigerant}`]))},
 ];
 
 // ---------- under-counter, rear wire condenser, bottom machine compartment (HR24B type) ----------
 function underCounter(p) {
   const W = p.width, D = p.depth, H = p.height, F = p.feet, X = W / 2;
+  const comp = compressorParams(findCompressor(p.compressor));
   const yFront = -D / 2, yRear = D / 2, bodyFront = yFront + 54;
-  const cmpTop = F + 255, upperFloor = cmpTop + 20, inTop = H - 60, inBottom = F + 75;
+  // Machine compartment: at least 255 high, taller if the compressor + pan + pipe over the rim need it.
+  const cmpTop = Math.max(F + 255, F + 10 + 18 + comp.shell.height + 50), upperFloor = cmpTop + 20, inTop = H - 60, inBottom = F + 75;
   const upperRear = yRear - 120, lowerRear = yRear - 240, sideIn = X - 67.5;
   const cond = {x0: X - 62.5, y: yRear - 17, zBot: cmpTop + 25, zTop: H - 70};
   const legs = 2 * Math.max(3, Math.round(((2 * cond.x0) / 42.7 + 1) / 2));
   const CX = r2(X * .252), CY = yRear - 112, floorZ = F + 10;
-  const shellTop = floorZ + 18 + 177;
+  const shellTop = floorZ + 18 + comp.shell.height;
+  // The suction riser must end at or above the suction stub, else the auto section would climb back past the capillary.
+  const suctionStubZ = floorZ + 18 + comp.stubs.find(s => s.port === 'suction').height;
   const pan = {x: [CX - 110, CX + 110], y: [CY - 72, CY + 72], z: [shellTop + 2, shellTop + 42]};
   const drier = {x: -(X - 57.5), y: yRear - 42, zBot: floorZ + 130};
   const fh = Math.min(150, X - 147.5), evTop = inTop, ev = {y: [yRear - 272, yRear - 217], z: [evTop - 90, evTop - 5]};
@@ -61,9 +69,7 @@ function underCounter(p) {
           {cylinder: {from: pt(s * (X - 34.5), yFront + 40, 0), to: pt(s * (X - 34.5), yFront + 40, F), radius: 13}},
           {cylinder: {from: pt(s * (X - 34.5) - 10, yRear - 36, F / 2), to: pt(s * (X - 34.5) + 10, yRear - 36, F / 2), radius: Math.min(10, F / 2)}}])},
       {id: 'compressor', type: 'hermetic-compressor', name: '밀폐형 압축기', basis: 'typical', notes: '소형 왕복동 밀폐형 일반 형상.',
-        center: [CX, CY], floorZ, shell: {width: 198, depth: 154.44, height: 177},
-        base: {plateThickness: 3, grommetHeight: 15, plate: {x: [-115, 115], y: [-85, 85]}, grommet: {dx: 95, dy: 65, radius: 11, radius2: 9}},
-        stubs: [{port: 'discharge', dy: -38, height: 100, od: 4.76}, {port: 'suction', dy: 0, height: 90, od: 6.35}, {port: 'process', dy: 38, height: 100, od: 6.4, crimp: true}],
+        model: p.compressor, center: [CX, CY], floorZ,
         relay: {id: 'start_relay', name: '기동 릴레이', notes: '커버 크기는 일반값.', x: [-10, 60], y: [62, 100], z: [40, 100]}},
       {id: 'pan', type: 'condensate-pan', name: '응축수 증발 팬', basis: 'typical', notes: '압축기 위 받침.', box: box(pan.x, pan.y, pan.z), wall: 2,
         bracket: {id: 'pan_bracket', name: '팬 받침 브래킷', basis: 'typical', ...box([CX - 70, CX + 70], [CY - 5, CY + 5], [shellTop - 4, pan.z[0]])}},
@@ -103,7 +109,7 @@ function underCounter(p) {
         path: [pt(hx, hy, drier.zBot + 25), pt(hx, hy, evTop - 12), pt(hx, cols[0], evTop - 12), pt(-(fh + 30), cols[0], evTop - 12), pt(-(fh + 30), cols[0], rows[0]), 'evaporator.in']},
       {id: 'evaporator', name: '증발관', od: 7.94, color: '#d08a5a', notes: '2열×4단 사행.', path: [{component: 'evaporator'}]},
       {id: 'suction', name: '흡입관', od: 6.35, color: '#d08a5a', bendRadius: 25, notes: '후면 단열재 속 수직 하강 → 압축기.',
-        path: ['evaporator.out', pt(sx, cols[1], rows[0]), pt(sx, hy, rows[0]), pt(sx, hy, drier.zBot - 22), {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']},
+        path: ['evaporator.out', pt(sx, cols[1], rows[0]), pt(sx, hy, rows[0]), pt(sx, hy, Math.max(drier.zBot - 22, suctionStubZ + 8)), {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']},
     ],
     checks: {minClearanceMm: 1, joinExclusionMm: 30, touching: [['capillary', 'suction'], ['capillary_hx', 'suction']]},
     overall: {width: W, depth: D + 24, height: H},
@@ -113,12 +119,14 @@ function underCounter(p) {
 // ---------- reach-in, bottom-mounted condensing unit (T-19-HC type) ----------
 function reachIn(p) {
   const W = p.width, D = p.depth, H = p.height, F = p.feet, X = W / 2;
+  const comp = compressorParams(findCompressor(p.compressor));
   const yFront = -D / 2, yRear = D / 2, bodyFront = yFront + 50;
-  const cmpTop = F + 242.7, inBottom = cmpTop + 65, inTop = H - 65, sideIn = X - 45, inRear = yRear - 55;
+  const cmpTop = Math.max(F + 242.7, F + 9.7 + 18 + comp.shell.height + 27), inBottom = cmpTop + 65, inTop = H - 65, sideIn = X - 45, inRear = yRear - 55;
   const fins = {x: [-X + 92.9, X - 192.9], y: [yFront + 76, yFront + 116], z: [F + 32.7, cmpTop - 20]};
   const rows = Array.from({length: 8}, (_, i) => cmpTop - 35 - i * 23);
   const ccols = [yFront + 106, yFront + 86];
   const CX = X - 222.9, CY = yRear - 141, floorZ = F + 9.7;
+  const suctionStubZ = floorZ + 18 + comp.stubs.find(s => s.port === 'suction').height;
   const dr = {x: -X + 42.9, y: yFront + 161, zBot: F + 42.7};
   const eh = Math.min(200, X - 135)  // leaves room for the suction riser at x = -X + 87.9
  , ev = {y: [yRear - 201, yRear - 131], z: [H - 195, H - 80]};
@@ -150,9 +158,7 @@ function reachIn(p) {
             {box: box([s * (X - 42.9) - 15, s * (X - 42.9) + 15], [y - 20, y + 20], [Math.min(50, F - 5), F])}])),
           {box: box([-(X - 42.9), X - 42.9], [yRear, yRear + bump], [150, 180])}, {box: box([-(X - 42.9), X - 42.9], [yRear, yRear + bump], [H - 155, H - 125])}]},
       {id: 'compressor', type: 'hermetic-compressor', name: '밀폐형 압축기', basis: 'typical', notes: '왕복동 밀폐형 일반 형상.',
-        center: pt(CX, CY), floorZ: r2(floorZ), shell: {width: 210, depth: 164, height: 185},
-        base: {plateThickness: 3, grommetHeight: 15, plate: {x: [-125, 125], y: [-90, 90]}, grommet: {dx: 100, dy: 68, radius: 11, radius2: 9}},
-        stubs: [{port: 'discharge', dy: -38, height: 105, od: 6.35}, {port: 'suction', dy: 0, height: 95, od: 7.94}, {port: 'process', dy: 38, height: 105, od: 6.4, crimp: true}],
+        model: p.compressor, center: pt(CX, CY), floorZ: r2(floorZ),
         relay: {id: 'start_relay', name: '기동 릴레이', notes: '커버 크기는 일반값.', x: [-10, 60], y: [70, 105], z: [50, 110]}},
       {id: 'condenser', type: 'fin-tube-coil', name: '응축기 (핀-튜브)', basis: 'typical', notes: '전면 그릴 뒤 핀-튜브 응축기, 2열×8단.', color: '#aab4b8',
         fins: {x: fins.x.map(r2), y: fins.y.map(r2), z: fins.z.map(r2), pitch: 3},
@@ -185,7 +191,7 @@ function reachIn(p) {
         path: [pt(hx, hy, cmpTop - 75), pt(hx, hy, H - 87), pt(hx, ecols[0], H - 87), pt(-(eh + 35), ecols[0], H - 87), pt(-(eh + 35), ecols[0], erows[0]), 'evaporator.in']},
       {id: 'evaporator', name: '증발관', od: 9.52, color: '#d08a5a', notes: '2열×4단 사행.', path: [{component: 'evaporator'}]},
       {id: 'suction', name: '흡입관', od: 7.94, color: '#d08a5a', bendRadius: 25, notes: '후면 단열재 속 수직 하강 → 압축기.',
-        path: ['evaporator.out', pt(sx, ecols[1], erows[0]), pt(sx, hy, erows[0]), pt(sx, hy, cmpTop - 100), {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']},
+        path: ['evaporator.out', pt(sx, ecols[1], erows[0]), pt(sx, hy, erows[0]), pt(sx, hy, Math.max(cmpTop - 100, suctionStubZ + 8)), {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']},
     ],
     checks: {minClearanceMm: 1, joinExclusionMm: 30, touching: [['capillary', 'suction'], ['capillary_hx', 'suction']]},
     overall: {width: W, depth: D + bump, height: H},
@@ -202,7 +208,7 @@ export const TEMPLATES = {
       {key: 'depth', label: '깊이 (도어 포함, 손잡이 제외)', unit: 'mm', min: 550, max: 750, default: 624},
       {key: 'height', label: '높이 (발 포함)', unit: 'mm', min: 700, max: 950, default: 805},
       {key: 'feet', label: '발 높이', unit: 'mm', min: 15, max: 150, default: 20},
-      ...COMMON_PARAMS.map(q => q.key === 'shelves' ? {...q, default: 3} : q),
+      ...COMMON_PARAMS.map(q => q.key === 'shelves' ? {...q, default: 3} : q.key === 'compressor' ? {...q, default: 'typical-r600a-small'} : q),
     ],
   },
   'reachin-bottom': {
@@ -214,7 +220,7 @@ export const TEMPLATES = {
       {key: 'depth', label: '깊이 (도어 포함, 범퍼 제외)', unit: 'mm', min: 560, max: 820, default: 622.3},
       {key: 'height', label: '높이 (캐스터 포함)', unit: 'mm', min: 1700, max: 2200, default: 2005},
       {key: 'feet', label: '캐스터 높이', unit: 'mm', min: 60, max: 160, default: 87.3},
-      ...COMMON_PARAMS.map(q => q.key === 'refrigerant' ? {...q, default: 'R290'} : q.key === 'shelves' ? {...q, default: 3} : q),
+      ...COMMON_PARAMS.map(q => q.key === 'refrigerant' ? {...q, default: 'R290'} : q.key === 'shelves' ? {...q, default: 3} : q.key === 'compressor' ? {...q, default: 'typical-r290-medium'} : q),
     ],
   },
 };
@@ -229,6 +235,9 @@ export function fromTemplate(templateId, input) {
   if (!t) throw new Error(`알 수 없는 형태 "${templateId}"`);
   const p = {...defaults(templateId), ...input};
   for (const q of t.params) if (q.min !== undefined && !(p[q.key] >= q.min && p[q.key] <= q.max)) throw new Error(`${q.label}은(는) ${q.min}~${q.max}${q.unit ?? ''} 사이여야 합니다`);
+  const comp = findCompressor(p.compressor);
+  if (!comp) throw new Error(`카탈로그에 없는 압축기 "${p.compressor}"`);
+  if (comp.refrigerant !== p.refrigerant) throw new Error(`압축기 냉매(${comp.refrigerant})가 선택한 냉매(${p.refrigerant})와 다릅니다`);
   const out = t.build(p);
   const id = String(p.id || p.model).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'custom';
   return {

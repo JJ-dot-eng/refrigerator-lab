@@ -3,6 +3,7 @@
 import {T, V, P, fillet, sweep, length, segDist} from './geometry.mjs';
 import {BUILDERS} from './builders.mjs';
 import {routePath} from './router.mjs';
+import {findCompressor} from './catalog.mjs';
 
 const isPoint = a => Array.isArray(a) && a.length === 3 && a.every(Number.isFinite);
 
@@ -20,8 +21,12 @@ export function validate(spec) {
     else if (ids.has(c.id)) err(at, 'id가 중복됩니다'); else ids.add(c.id);
     if (!BUILDERS[c?.type]) err(at, `알 수 없는 부품 종류 "${c?.type}" (가능: ${Object.keys(BUILDERS).join(', ')})`);
     if (!c?.name) err(at, 'name이 필요합니다');
+    if (c?.type === 'cad-part' && !c.file) err(at, 'CAD 부품에는 file(파일 이름)이 필요합니다');
+    if (c?.type === 'hermetic-compressor' && c.model && !findCompressor(c.model)) err(at, `카탈로그에 없는 압축기 모델 "${c.model}"`);
+    if (c?.type === 'hermetic-compressor' && !c.model && !(c.shell && c.base && c.stubs)) err(at, '압축기는 카탈로그 model 또는 shell·base·stubs가 필요합니다');
   }
-  if (!Array.isArray(spec.circuit) || spec.circuit.length < 2) { err('circuit', '냉매 회로 구간이 2개 이상 필요합니다'); return errors; }
+  if (!Array.isArray(spec.circuit)) { err('circuit', 'circuit 목록이 필요합니다 (배관이 없으면 빈 목록 [])'); return errors; }
+  if (spec.circuit.length === 1) { err('circuit', '냉매 회로는 비워 두거나 2개 이상의 구간이어야 합니다'); return errors; }
   const portOwners = new Set(spec.components.map(c => c.id));
   for (const [i, r] of spec.circuit.entries()) {
     const at = `circuit[${i}]${r?.id ? ` (${r.id})` : ''}`;
@@ -58,15 +63,18 @@ function helixPoints(h) {
   return out;
 }
 
-export function build(spec) {
+// ctx.cad: {fileName: {meshes: [{positions, indices}]}} for cad-part components.
+export function build(spec, ctx = {}) {
   const errors = validate(spec);
   if (errors.length) return {errors};
   const comps = {}, parts = [];
-  for (const c of spec.components) {
-    const out = BUILDERS[c.type](c, {fillet, sweep});
-    comps[c.id] = out;
-    parts.push(...out.parts);
-  }
+  try {
+    for (const c of spec.components) {
+      const out = BUILDERS[c.type](c, {fillet, sweep, cad: ctx.cad});
+      comps[c.id] = out;
+      parts.push(...out.parts);
+    }
+  } catch (e) { return {errors: [e.message]}; }
   const resolve = (item, where) => {
     if (typeof item === 'string') {
       const [owner, port] = item.split('.'), p = comps[owner].ports[port];
@@ -98,7 +106,17 @@ export function build(spec) {
     // Connected parts are obstacles too: their ports stick out past their volume, and the end cells stay open.
     for (const [id, c] of Object.entries(comps)) if (!ignore.has(id)) for (const b of c.obstacles ?? c.solids ?? []) obstacles.push(grow(b, margin));
     const mayTouch = new Set((checks.touching ?? []).filter(p => p.includes(r.id)).flat());
-    for (const [oi, o] of pending.entries()) if (oi !== ri && !mayTouch.has(o.r.id)) for (const piece of o.pieces) if (piece) for (const b of segmentBoxes(piece, o.r.od)) obstacles.push(grow(b, margin));
+    // Other pipes as known so far: consecutive resolved pieces form continuous polylines (gaps = unrouted auto sections).
+    // Pipes allowed to touch this one (e.g. capillary on suction line) may be reached but not crossed.
+    for (const [oi, o] of pending.entries()) if (oi !== ri) {
+      const m = mayTouch.has(o.r.id) ? r.od / 2 - .05 : margin;
+      let run = [];
+      for (const piece of [...o.pieces, null]) {
+        if (piece) { run.push(...piece); continue; }
+        for (const b of [...segmentBoxes(run, o.r.od), ...run.map(q => grow({x: [q.x, q.x], y: [q.y, q.y], z: [q.z, q.z]}, o.r.od / 2))]) obstacles.push(grow(b, m));
+        run = [];
+      }
+    }
     const from = pieces[j - 1].at(-1), to = pieces[j + 1][0];
     const opts = {bounds: cabinet.bounds, soft: cabinet.soft ?? [], obstacles, grid: item.auto.grid, bendCost: item.auto.bendCost, softCost: item.auto.softCost};
     // Open only the end cells first; widen the escape zone only if a port is boxed in.
@@ -119,8 +137,9 @@ export function build(spec) {
   const fail = [];
   const same = (a, b) => a.distanceTo(b) < 1e-6;
   const owner = i => typeof i === 'string' ? i.split('.')[0] : i?.port !== undefined ? String(i.port).split('.')[0] : null;
-  const first = spec.circuit[0].path[0], last = spec.circuit.at(-1).path.at(-1);
-  if (!owner(first) || owner(first) !== owner(last)) fail.push('회로는 같은 부품(압축기)의 포트에서 시작하고 끝나야 합니다');
+  const hasCircuit = spec.circuit.length > 0;
+  const first = spec.circuit[0]?.path[0], last = spec.circuit.at(-1)?.path.at(-1);
+  if (hasCircuit && (!owner(first) || owner(first) !== owner(last))) fail.push('회로는 같은 부품(압축기)의 포트에서 시작하고 끝나야 합니다');
   for (let i = 0; i < routes.length - 1; i++) {
     const a = routes[i], b = routes[i + 1];
     if (same(a.points.at(-1), b.points[0])) continue;
@@ -172,11 +191,11 @@ export function build(spec) {
   const door = spec.components.find(c => c.id === 'door');
   const model = {units: 'mm', coordinateSystem: 'X right viewed from front; Y rear; Z up. THREE x=X/1000,y=Z/1000,z=-Y/1000.', doorPivotMm: door?.hinge ?? null, parts: meshes};
   const routesOut = {model: spec.meta.model, refrigerant: spec.meta.refrigerant, coordinateBasis: 'mm; front-view right +X, rear +Y, up +Z',
-    circuitOrder: routes.map(r => r.id), compressorPorts: Object.fromEntries(Object.entries(comps[owner(first)].ports).map(([k, p]) => [k, p.toArray()])),
+    circuitOrder: routes.map(r => r.id), compressorPorts: hasCircuit ? Object.fromEntries(Object.entries(comps[owner(first)].ports).map(([k, p]) => [k, p.toArray()])) : {},
     routes: routes.map(r => ({id: r.id, name: r.name, outerDiameterMm: r.od, lengthMm: Math.round(length(r.points)), notes: r.notes, points: r.points.map(p => p.toArray().map(round))}))};
   const verification = {valid: fail.length === 0, specId: spec.id, partCount: meshes.length, triangles: meshes.reduce((s, m) => s + m.indices.length / 3, 0),
-    overallWithHandleMm: {width: size[0], depth: size[1], height: size[2]}, circuitClosed: !fail.some(f => f.includes('끊김') || f.includes('시작하고')),
-    pipeClearanceMm: clearances, pipeLengthsMm: Object.fromEntries(routes.map(r => [r.id, Math.round(length(r.points))])), failures: fail, notManufacturerNativeCAD: true};
+    overallWithHandleMm: {width: size[0], depth: size[1], height: size[2]}, circuitClosed: hasCircuit && !fail.some(f => f.includes('끊김') || f.includes('시작하고')), hasCircuit,
+    pipeClearanceMm: clearances, pipeLengthsMm: Object.fromEntries(routes.map(r => [r.id, Math.round(length(r.points))])), failures: fail, notManufacturerNativeCAD: !spec.components.some(c => c.type === 'cad-part')};
   const metadata = {...spec.meta, specId: spec.id, parts: meshes.map(({positions, indices, ...rest}) => rest)};
   return {errors: [], model, routes: routesOut, verification, metadata};
 }

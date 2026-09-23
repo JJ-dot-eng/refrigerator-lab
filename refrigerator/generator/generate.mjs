@@ -1,8 +1,10 @@
 // CLI: node generator/generate.mjs [spec-id ...]
 // Reads specs/<id>.json, writes public/models/<id>/{spec,model,routes,metadata,verification}.json + model.obj
 // and public/models/index.json. Exits 1 if a spec is invalid or fails its checks.
+// cad-part components read their files from specs/cad/.
 import fs from 'node:fs';
 import {build, toObj} from './build.mjs';
+import {loadCadFiles} from './cad-node.mjs';
 
 const root = new URL('../', import.meta.url), specsDir = new URL('specs/', root), outDir = new URL('public/models/', root);
 const all = fs.readdirSync(specsDir).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5)).sort();
@@ -10,7 +12,7 @@ const ids = process.argv.slice(2).length ? process.argv.slice(2) : all;
 let failed = false;
 for (const id of ids) {
   const spec = JSON.parse(fs.readFileSync(new URL(`${id}.json`, specsDir), 'utf8'));
-  const out = build(spec);
+  const out = build(spec, {cad: await loadCadFiles(spec, new URL('cad/', specsDir))});
   const problems = out.errors.length ? out.errors : out.verification.failures;
   if (problems.length) { console.error(`✗ ${id}\n  ${problems.join('\n  ')}`); failed = true; continue; }
   const dir = new URL(`${id}/`, outDir);

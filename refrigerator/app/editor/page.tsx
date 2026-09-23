@@ -9,6 +9,9 @@ import {asset} from '@/lib/asset';
 import {Fields,type Change} from './fields';
 import DrawingView from './drawing';
 import {translateComponent,MOVABLE_TYPES} from '@/generator/transform.mjs';
+import {COMPRESSORS,resolveCompressor} from '@/generator/catalog.mjs';
+import {CAD_EXTENSIONS} from '@/generator/cad.mjs';
+import {parseCadFile,saveCadBytes,loadCadBytes,type CadFile} from '@/lib/cad-browser';
 import {WIZARD_KEY,WIZARD_BASE,draftKey} from '@/lib/storage-keys';
 import '../hr24/style.css';
 import './editor.css';
@@ -21,6 +24,8 @@ function setIn(obj:unknown,path:(string|number)[],value:unknown):unknown{
  if(!path.length)return value;const [k,...rest]=path;
  const copy=(Array.isArray(obj)?[...obj]:{...(obj as object)}) as Record<string|number,unknown>;copy[k]=setIn(copy[k],rest,value);return copy;}
 const mentions=(text:string,id:string)=>new RegExp(`(^|[^a-z0-9_])${id}([^a-z0-9_]|$)`).test(text);
+const EMPTY_BASE='empty';
+const emptySpec=():Spec=>({schema:'refrigerator-spec/1',id:'cad-model',meta:{model:'새 CAD 모델',method:'가져온 CAD 형상. 부품을 추가하거나 배관을 연결할 수 있습니다.'},components:[],circuit:[]});
 function download(name:string,text:string,type:string){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
 
 export default function EditorPage(){
@@ -29,27 +34,34 @@ export default function EditorPage(){
  const [result,setResult]=useState<Result|null>(null),[scene,setScene]=useState<SceneData|null>(null),[restored,setRestored]=useState(false),[specBase,setSpecBase]=useState('');
  const [selected,setSelected]=useState('compressor'),[view,setView]=useState('rear'),[transparent,setTransparent]=useState(true),[flow,setFlow]=useState(false),[door,setDoor]=useState(false),[pane,setPane]=useState<'3d'|'2d'>('3d');
  const [rawDraft,setRawDraft]=useState<string|null>(null),[rawError,setRawError]=useState(''),[fileError,setFileError]=useState('');
- const fileInput=useRef<HTMLInputElement>(null);
+ const fileInput=useRef<HTMLInputElement>(null),cadInput=useRef<HTMLInputElement>(null);
+ const [cadFiles,setCadFiles]=useState<Record<string,CadFile>>({}),[cadBusy,setCadBusy]=useState('');
  useEffect(()=>{fetch(asset('/models/index.json')).then(r=>r.json() as Promise<{models:{id:string;model:string}[]}>).then(d=>{
   // A spec handed over from the /new wizard is offered as an extra base model.
   let wizard:Spec|null=null;try{const w=localStorage.getItem(WIZARD_KEY);if(w)wizard=JSON.parse(w) as Spec;}catch{wizard=null;}
-  const list=wizard?[...d.models,{id:WIZARD_BASE,model:`${wizard.meta.model} (새로 만든 모델)`}]:d.models;setIndex(list);
+  const list=[...d.models,...(wizard?[{id:WIZARD_BASE,model:`${wizard.meta.model} (새로 만든 모델)`}]:[]),{id:EMPTY_BASE,model:'빈 모델 (CAD 가져오기용)'}];setIndex(list);
   const fromWizard=wizard&&new URLSearchParams(location.search).get('from')===WIZARD_BASE;setBaseId(fromWizard?WIZARD_BASE:d.models[0]?.id??'');}).catch(()=>setIndex([]));},[]);
  // Load the base spec (or the saved draft for it).
  useEffect(()=>{if(!baseId)return;let live=true;
-  const source=baseId===WIZARD_BASE?Promise.resolve(JSON.parse(localStorage.getItem(WIZARD_KEY)??'null') as Spec):fetch(asset(`/models/${baseId}/spec.json`)).then(r=>r.json() as Promise<Spec>);
+  const source=baseId===EMPTY_BASE?Promise.resolve(emptySpec()):baseId===WIZARD_BASE?Promise.resolve(JSON.parse(localStorage.getItem(WIZARD_KEY)??'null') as Spec):fetch(asset(`/models/${baseId}/spec.json`)).then(r=>r.json() as Promise<Spec>);
   source.then(s=>{if(!live||!s)return;
    const draft=readDraft(baseId);let start=s,fromDraft=false;
    if(draft){try{const d=JSON.parse(draft) as Spec;if(JSON.stringify(d)!==JSON.stringify(s)){start=d;fromDraft=true;}}catch{writeDraft(baseId,null);}}
    setOriginal(s);setSpec(start);setSpecBase(baseId);setHistory([]);setRestored(fromDraft);setScene(null);setSelected('compressor');}).catch(()=>{if(live)setFileError('사양서를 불러오지 못했습니다.');});
   return()=>{live=false;};},[baseId]);
+ // CAD files the spec names but this session has not parsed yet: restore them from IndexedDB.
+ const cadNames=[...new Set((spec?.components??[]).filter(c=>c.type==='cad-part'&&typeof c.file==='string').map(c=>c.file as string))].filter(n=>!cadFiles[n]).join('|');
+ useEffect(()=>{if(!cadNames)return;let live=true;
+  void (async()=>{for(const name of cadNames.split('|')){const bytes=await loadCadBytes(name).catch(()=>undefined);if(!bytes||!live)continue;
+   setCadBusy(`${name} 다시 읽는 중…`);try{const f=await parseCadFile(name,bytes);if(live)setCadFiles(m=>({...m,[name]:f}));}catch{/* build() reports the missing file */}}if(live)setCadBusy('');})();
+  return()=>{live=false;};},[cadNames]);
  // Rebuild shortly after each edit; keep the last good 3D while the spec is broken.
  useEffect(()=>{if(!spec)return;
-  const t=setTimeout(()=>{let out:Result;try{out=build(spec) as Result;}catch(e){out={errors:[`생성 중 오류: ${(e as Error).message}`]};}
+  const t=setTimeout(()=>{let out:Result;try{out=build(spec,{cad:cadFiles}) as Result;}catch(e){out={errors:[`생성 중 오류: ${(e as Error).message}`]};}
    setResult(out);if(out.model&&out.routes)setScene({model:out.model,routes:out.routes});
    // Drafts are keyed by the base the spec was loaded from, not the currently selected base.
    if(specBase)writeDraft(specBase,original&&JSON.stringify(spec)===JSON.stringify(original)?null:JSON.stringify(spec));},250);
-  return()=>clearTimeout(t);},[spec,specBase,original]);
+  return()=>clearTimeout(t);},[spec,specBase,original,cadFiles]);
  const change:Change=(path,value)=>{if(!spec)return;setHistory(h=>[...h.slice(-49),spec]);setSpec(setIn(spec,path,value) as Spec);};
  const undo=()=>{const prev=history.at(-1);if(prev){setHistory(history.slice(0,-1));setSpec(prev);}};
  const problems=result?[...result.errors,...(result.verification?.failures??[])]:[];
@@ -66,6 +78,17 @@ export default function EditorPage(){
  async function upload(file:File){setFileError('');try{const s=JSON.parse(await file.text()) as Spec;
   if(s?.schema!=='refrigerator-spec/1')throw Error('schema가 "refrigerator-spec/1"이 아닙니다');setHistory(h=>spec?[...h.slice(-49),spec]:h);setSpec(s);setRestored(false);}
   catch(e){setFileError(`불러오기 실패: ${(e as Error).message}`);}}
+ // Import a CAD file as a new part, standing on the floor at the model centre.
+ async function importCad(file:File){if(!spec)return;setFileError('');setCadBusy(`${file.name} 읽는 중…`);
+  try{const bytes=new Uint8Array(await file.arrayBuffer()),parsed=await parseCadFile(file.name,bytes);await saveCadBytes(file.name,bytes).catch(()=>undefined);
+   setCadFiles(m=>({...m,[file.name]:parsed}));
+   const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];for(const m of parsed.meshes)for(let i=0;i<m.positions.length;i++){const a=i%3;lo[a]=Math.min(lo[a],m.positions[i]);hi[a]=Math.max(hi[a],m.positions[i]);}
+   const r=(x:number)=>Math.round(x*100)/100,ids=new Set(spec.components.map(c=>c.id));let n=1;while(ids.has(`cad_${n}`))n++;
+   const part:Item={id:`cad_${n}`,type:'cad-part',name:file.name.replace(/\.[^.]+$/,''),basis:'drawing',notes:`가져온 CAD (${parsed.triangles.toLocaleString()} 삼각형).`,file:file.name,
+    transform:{translate:[r(-(lo[0]+hi[0])/2),r(-(lo[1]+hi[1])/2),r(-lo[2])],rotateDeg:[0,0,0],scale:1},ports:{}};
+   setHistory(h=>[...h.slice(-49),spec]);setSpec({...spec,components:[...spec.components,part]});setSelected(part.id);}
+  catch(e){setFileError(`CAD 불러오기 실패: ${(e as Error).message}`);}finally{setCadBusy('');}}
+ function removeComponent(i:number){if(!spec)return;setHistory(h=>[...h.slice(-49),spec]);setSpec({...spec,components:spec.components.filter((_,j)=>j!==i)});setSelected('');}
  const raw=rawDraft??(spec?JSON.stringify(spec,null,2):'');
  function applyRaw(){try{const s=JSON.parse(raw) as Spec;setHistory(h=>spec?[...h.slice(-49),spec]:h);setSpec(s);setRawDraft(null);setRawError('');}catch(e){setRawError(`JSON 형식 오류: ${(e as Error).message}`);}}
 
@@ -83,7 +106,17 @@ export default function EditorPage(){
   :<DrawingView model={scene?.model??null} routes={scene?.routes??null} movable={movable} names={names} bad={bad} selected={selected} onSelect={id=>{if(spec&&[...spec.components,...spec.circuit].some(c=>c.id===id))setSelected(id);}} onMove={moveComponent}/>}
   <div className="ed-editor">{current?<><h2>{current.name} <small>{String(current.type??'냉매 배관')} · {current.id}</small></h2>
    {typeof current.notes==='string'&&<p className="ed-desc">{current.notes}</p>}
+   {current.type==='hermetic-compressor'&&listIndex>=0&&<label className="ed-row ed-wide ed-catalog"><span>카탈로그 모델</span>
+    <select value={typeof current.model==='string'?current.model:''} onChange={e=>{const id=e.target.value,{shell:_s,base:_b,stubs:_t,model:_m,...rest}=current;
+     if(id)change(['components',listIndex],{...rest,model:id});else change(['components',listIndex],{...rest,...resolveCompressor(current)} as Item);}}>
+     <option value="">직접 입력 (아래 치수 사용)</option>{COMPRESSORS.map(c=><option key={c.id} value={c.id}>{c.manufacturer} {c.model} · {c.refrigerant}{c.hp?` · ${c.hp}HP`:''}</option>)}</select></label>}
+   {current.type==='hermetic-compressor'&&current.model?<p className="ed-help">{(()=>{const c=COMPRESSORS.find(x=>x.id===current.model);return c?.source?.url?<>데이터시트: <a href={c.source.url} target="_blank" rel="noreferrer">{c.manufacturer} {c.model}</a>{c.source.page?` (${c.source.page}쪽)`:''}. 쉘·받침·연결관 치수는 카탈로그 값을 씁니다. 직접 입력으로 바꾸면 수정할 수 있습니다.</>:'일반값 항목입니다. 직접 입력으로 바꾸면 치수를 수정할 수 있습니다.';})()}</p>:null}
+   {current.type==='cad-part'&&!cadFiles[String(current.file)]&&<p className="ed-fail">CAD 파일 “{String(current.file)}”이 이 브라우저에 없습니다. 같은 이름의 파일을 “CAD 불러오기”로 다시 여세요.</p>}
    <Fields value={current} path={currentPath} onChange={change} pathList={circuitIndex>=0}/>
+   {listIndex>=0&&<div className="ed-files" style={{marginTop:10}}>
+    {current.type==='cad-part'&&<button onClick={()=>{const ports=(current.ports??{}) as Record<string,number[]>;let n=1;while(ports[`p${n}`])n++;change([...currentPath,'ports'],{...ports,[`p${n}`]:[0,0,0]});}}>포트 추가</button>}
+    <button onClick={()=>removeComponent(listIndex)}>이 부품 삭제</button></div>}
+   {current.type==='cad-part'&&<p className="ed-help">포트는 CAD 원본 좌표(mm)로 적습니다. 배관 경로에서 “{current.id}.포트이름”으로 연결합니다. 회전은 X→Y→Z 순서(도)입니다.</p>}
    <p className="ed-help">단위 mm. 좌표는 정면 기준 X 오른쪽, Y 뒤쪽, Z 위. 숫자 칸에서 ↑↓는 1mm, Shift+↑↓는 10mm씩 바꿉니다.{circuitIndex>=0&&' 경로의 ＋는 경유점, ⤳는 자동 경로 구간(부품과 다른 배관을 피해 경로를 찾음)을 추가하고 ✕는 삭제합니다. 포트 기준 점(port + offset)은 부품을 옮기면 함께 움직입니다.'}</p></>
    :<p className="ed-desc">왼쪽 목록이나 3D 화면에서 부품을 고르세요.</p>}</div>
  </section>
@@ -96,9 +129,12 @@ export default function EditorPage(){
   <div className="ed-files"><button onClick={()=>spec&&download(`${spec.id}.json`,JSON.stringify(spec,null,2),'application/json')}>사양서 JSON 저장</button>
    <button disabled={!result?.model} onClick={()=>spec&&result?.model&&download(`${spec.id}.obj`,toObj(result.model,spec.meta.model) as string,'model/obj')}>3D 모델 OBJ 저장</button>
    <button onClick={()=>fileInput.current?.click()}>사양서 JSON 열기</button>
+   <button disabled={!!cadBusy} onClick={()=>cadInput.current?.click()}>CAD 불러오기</button>
+   <input ref={cadInput} type="file" accept={CAD_EXTENSIONS.map(e=>'.'+e).join(',')} hidden onChange={e=>{const f=e.target.files?.[0];if(f)void importCad(f);e.target.value='';}}/>
    <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={e=>{const f=e.target.files?.[0];if(f)void upload(f);e.target.value='';}}/></div>
   {fileError&&<p className="ed-fail">{fileError}</p>}
-  <p className="ed-help">열기는 파일을 이 브라우저 안에서만 읽습니다. 서버로 보내지 않습니다.</p>
+  {cadBusy&&<p className="ed-help">{cadBusy}</p>}
+  <p className="ed-help">열기는 파일을 이 브라우저 안에서만 읽습니다. 서버로 보내지 않습니다. CAD는 STEP·IGES·STL·OBJ를 읽고, 원본은 이 브라우저에만 보관합니다.</p>
   <details className="ed-raw"><summary>JSON 직접 편집</summary><textarea aria-label="사양서 JSON" value={raw} spellCheck={false} onChange={e=>setRawDraft(e.target.value)}/><button onClick={applyRaw}>적용</button>{rawDraft!==null&&<button onClick={()=>{setRawDraft(null);setRawError('');}}>편집 취소</button>}{rawError&&<p className="ed-fail">{rawError}</p>}</details>
  </section></div>
  <footer><strong>사양서 양식</strong><p>부품 종류와 항목 설명은 저장소의 refrigerator/specs/README.md에 있습니다. 새 부품 추가나 삭제는 JSON 직접 편집에서 할 수 있습니다.</p></footer></main>;

@@ -9,6 +9,7 @@
     "height": 805
   },
   "circuitClosed": true,
+  "hasCircuit": true,
   "pipeClearanceMm": {
     "discharge|pan_loop": 25.2,
     "discharge|condenser_feed": 223.9,
