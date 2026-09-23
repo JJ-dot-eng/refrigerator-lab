@@ -2,7 +2,7 @@
 
 모델별 근거, 가정, 한계와 데이터 재생성 방법을 정리한다. 전체 소개와 실행 방법은 [저장소 README](../README.md)를 본다.
 
-- [사양서 기반 생성기 (`/models`, `/editor`)](#사양서-기반-생성기-models-editor)
+- [사양서 기반 생성기 (`/new`, `/models`, `/editor`)](#사양서-기반-생성기-new-models-editor)
 - [HR24B (`/`)](#hoshizaki-hr24b-)
 - [True T-19-HC (`/reference`)](#true-t-19-hc-reference)
 - [MONO 120 (`/lab`)](#mono-120-lab)
@@ -10,7 +10,7 @@
 - [배포](#github-pages)
 - [검증](#검증)
 
-## 사양서 기반 생성기 (`/models`, `/editor`)
+## 사양서 기반 생성기 (`/new`, `/models`, `/editor`)
 
 냉장고 한 대를 사양서 JSON 하나로 기술하고, `generator/`가 외함·부품·냉매 배관을 만들어 자동 검사한다(회로 연결, 배관 간격, 부품 관통, 전체 치수). 양식과 부품 종류는 [specs/README.md](specs/README.md)에 있다.
 

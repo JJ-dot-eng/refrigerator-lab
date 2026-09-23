@@ -1,6 +1,6 @@
 # Refrigerator Lab
 
-업소용 1도어 냉장고를 브라우저에서 3D로 살펴보고 냉동 사이클을 시뮬레이션하는 웹앱입니다.
+업소용 냉장고를 브라우저에서 3D로 설계하고 살펴보는 웹앱입니다. 형태와 치수만 넣으면 부품 배치와 냉매 배관을 자동으로 만들고 간섭을 검사하며, 도면·부품 카탈로그·CAD 파일로 다듬을 수 있습니다. 실제 제품 재구성(HR24B, T-19-HC)과 냉동 사이클 시뮬레이션도 들어 있습니다.
 
 **사이트:** https://jj-dot-eng.github.io/refrigerator-lab/
 
@@ -42,7 +42,7 @@ refrigerator/
 ├─ components/     3D 장면, 냉매 회로도
 ├─ generator/      사양서 → 3D 모델·배관 생성기와 자동 검사
 ├─ specs/          냉장고 사양서 (JSON) 와 양식 설명
-├─ lib/            시뮬레이션 계산
+├─ lib/            시뮬레이션 계산, CAD·저장소 보조 코드
 ├─ public/         3D 모델·배관·물성표 데이터와 생성 스크립트
 └─ tests/          계산·모델 검증
 .github/workflows/ GitHub Pages 자동 배포
