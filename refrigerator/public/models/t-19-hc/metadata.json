@@ -1,0 +1,546 @@
+{
+  "model": "True T-19-HC",
+  "summary": "1도어 리치인 냉장고. 하부 응축 유닛(핀-튜브 응축기와 팬), 천장 증발기.",
+  "refrigerant": "R290",
+  "source": "https://www.truemfg.com/wp-content/uploads/true-media/spec-sheets/T-19-HC.pdf",
+  "sourceRevision": "spec sheet 1/24",
+  "sourcePages": [
+    2
+  ],
+  "method": "Exterior dimensions follow spec sheet page 2 (inches converted to mm). Bottom-mounted condensing unit and R290 are sourced; internal layout, component shapes and tube sizes are typical for bottom-mount reach-ins, not factory CAD or measurements.",
+  "basisLegend": {
+    "drawing": "dimension or feature stated in the spec sheet",
+    "typical": "industry-typical shape, size and placement"
+  },
+  "specId": "t-19-hc",
+  "parts": [
+    {
+      "id": "cabinet",
+      "name": "외함·내함",
+      "color": 12569552,
+      "basis": "drawing",
+      "page": 2,
+      "notes": "폭 685.8 × 깊이 622.3(도어 포함) × 본체 높이 1917.7mm, 캐스터 포함 2005.0mm (사양서 2쪽 인치 치수). 벽 두께와 내부 치수는 추정.",
+      "boundsMm": {
+        "min": [
+          -342.9,
+          -261.15,
+          87.31
+        ],
+        "max": [
+          342.9,
+          311.15,
+          2005.01
+        ]
+      }
+    },
+    {
+      "id": "door",
+      "name": "단열 도어",
+      "color": 12569552,
+      "basis": "drawing",
+      "page": 2,
+      "notes": "우측 힌지, 305mm 매립 손잡이(사양서). 두께 50과 손잡이 위치는 추정.",
+      "boundsMm": {
+        "min": [
+          -340.9,
+          -311.15,
+          345
+        ],
+        "max": [
+          340.9,
+          -261.15,
+          1950
+        ]
+      }
+    },
+    {
+      "id": "display",
+      "name": "외부 온도 표시창",
+      "group": "cabinet",
+      "color": 1845808,
+      "basis": "drawing",
+      "page": 2,
+      "notes": "외부 온도 표시(사양서). 크기는 추정.",
+      "boundsMm": {
+        "min": [
+          -100,
+          -263.15,
+          1965
+        ],
+        "max": [
+          100,
+          -261.15,
+          1990
+        ]
+      }
+    },
+    {
+      "id": "grille",
+      "name": "기계실 전면 그릴",
+      "group": "cabinet",
+      "color": 3818569,
+      "basis": "typical",
+      "notes": "응축기 흡기용 전면 그릴. 살 배치는 추정.",
+      "boundsMm": {
+        "min": [
+          -332.9,
+          -264,
+          110
+        ],
+        "max": [
+          332.9,
+          -262,
+          328
+        ]
+      }
+    },
+    {
+      "id": "shelves",
+      "name": "선반 3개",
+      "color": 14081504,
+      "basis": "drawing",
+      "page": 2,
+      "notes": "선반 3개, 평면 치수 581.0 × 463.6mm (사양서). 높이와 철선 간격은 추정.",
+      "boundsMm": {
+        "min": [
+          -292.23,
+          -254.73,
+          798
+        ],
+        "max": [
+          292.23,
+          208.28,
+          1602
+        ]
+      }
+    },
+    {
+      "id": "castors",
+      "name": "캐스터·후면 범퍼",
+      "group": "cabinet",
+      "color": 3818569,
+      "basis": "drawing",
+      "page": 2,
+      "notes": "Ø64 캐스터, 후면 범퍼 포함 깊이 634.2mm (사양서). 포크 형상은 추정.",
+      "boundsMm": {
+        "min": [
+          -315,
+          -252,
+          0
+        ],
+        "max": [
+          315,
+          323.06,
+          1880
+        ]
+      }
+    },
+    {
+      "id": "compressor",
+      "name": "밀폐형 압축기",
+      "color": 1975078,
+      "basis": "typical",
+      "notes": "R290 왕복동 밀폐형(약 1/4~1/3HP급) 일반 형상. 쉘 약 210×164×185mm. 하부 응축 유닛 뒤쪽.",
+      "boundsMm": {
+        "min": [
+          15,
+          88,
+          115
+        ],
+        "max": [
+          225,
+          252,
+          300
+        ]
+      }
+    },
+    {
+      "id": "compressor_base",
+      "name": "압축기 받침판·방진고무",
+      "group": "compressor",
+      "color": 2962230,
+      "basis": "typical",
+      "notes": "받침판과 방진고무 4개.",
+      "boundsMm": {
+        "min": [
+          -5,
+          80,
+          97
+        ],
+        "max": [
+          245,
+          260,
+          117
+        ]
+      }
+    },
+    {
+      "id": "compressor_stubs",
+      "name": "압축기 연결관",
+      "group": "compressor",
+      "color": 12745806,
+      "basis": "typical",
+      "notes": "토출 Ø6.35 · 흡입 Ø7.94 · 충전관(끝 압착).",
+      "boundsMm": {
+        "min": [
+          -6,
+          128.82,
+          206.03
+        ],
+        "max": [
+          41.86,
+          212.5,
+          223.2
+        ]
+      }
+    },
+    {
+      "id": "start_relay",
+      "name": "기동 릴레이",
+      "color": 3817798,
+      "basis": "typical",
+      "notes": "커버 크기는 일반값.",
+      "boundsMm": {
+        "min": [
+          110,
+          240,
+          147
+        ],
+        "max": [
+          180,
+          275,
+          207
+        ]
+      }
+    },
+    {
+      "id": "condenser",
+      "name": "응축기 (핀-튜브)",
+      "color": 11187384,
+      "basis": "typical",
+      "notes": "하부 전면 그릴 뒤 핀-튜브 응축기. Ø9.52 동관 2열×8단, 알루미늄 핀 3mm 피치.",
+      "boundsMm": {
+        "min": [
+          -254,
+          -235,
+          120
+        ],
+        "max": [
+          154,
+          -195,
+          310
+        ]
+      }
+    },
+    {
+      "id": "condenser_fan",
+      "name": "응축기 팬",
+      "color": 2831160,
+      "basis": "typical",
+      "notes": "Ø200 축류팬. 전면 그릴로 외기를 빨아 응축기를 지나 뒤로 보냄.",
+      "boundsMm": {
+        "min": [
+          -265,
+          -172,
+          111
+        ],
+        "max": [
+          165,
+          -85,
+          319
+        ]
+      }
+    },
+    {
+      "id": "condenser_fan_rotor",
+      "name": "응축기 팬 날개",
+      "group": "condenser_fan",
+      "spin": {
+        "centerMm": [
+          -50,
+          0,
+          215
+        ],
+        "axisMm": [
+          0,
+          1,
+          0
+        ],
+        "rpm": 1500
+      },
+      "color": 3884620,
+      "basis": "typical",
+      "notes": "",
+      "boundsMm": {
+        "min": [
+          -147,
+          -160,
+          118
+        ],
+        "max": [
+          47,
+          -140,
+          312
+        ]
+      }
+    },
+    {
+      "id": "drier",
+      "name": "필터 드라이어",
+      "color": 13214042,
+      "basis": "typical",
+      "notes": "Ø19×100mm 수직, 위 입구 · 아래 모세관 출구.",
+      "boundsMm": {
+        "min": [
+          -309.5,
+          -159.5,
+          114
+        ],
+        "max": [
+          -290.5,
+          -140.5,
+          246
+        ]
+      }
+    },
+    {
+      "id": "evaporator",
+      "name": "증발기",
+      "color": 13620954,
+      "basis": "typical",
+      "notes": "천장 증발기. Ø9.52 동관 2열×4단, 알루미늄 핀 6mm 피치, 400×70×115mm.",
+      "boundsMm": {
+        "min": [
+          -204,
+          110,
+          1810
+        ],
+        "max": [
+          204,
+          180,
+          1925
+        ]
+      }
+    },
+    {
+      "id": "evaporator_tray",
+      "name": "증발기 물받이",
+      "group": "evaporator",
+      "color": 10134696,
+      "basis": "typical",
+      "notes": "",
+      "boundsMm": {
+        "min": [
+          -225,
+          100,
+          1795
+        ],
+        "max": [
+          225,
+          190,
+          1802
+        ]
+      }
+    },
+    {
+      "id": "evaporator_fan",
+      "name": "증발기 팬",
+      "color": 2831160,
+      "basis": "typical",
+      "notes": "Ø110 축류팬과 슈라우드. 증발기 앞에서 냉기를 고내로 보냄.",
+      "boundsMm": {
+        "min": [
+          -230,
+          74,
+          1795
+        ],
+        "max": [
+          230,
+          106,
+          1940
+        ]
+      }
+    },
+    {
+      "id": "evaporator_fan_rotor",
+      "name": "증발기 팬 날개",
+      "group": "evaporator_fan",
+      "spin": {
+        "centerMm": [
+          0,
+          0,
+          1868
+        ],
+        "axisMm": [
+          0,
+          1,
+          0
+        ],
+        "rpm": 1300
+      },
+      "color": 3884620,
+      "basis": "typical",
+      "notes": "",
+      "boundsMm": {
+        "min": [
+          -55.3,
+          63,
+          1817.82
+        ],
+        "max": [
+          55.3,
+          77,
+          1923
+        ]
+      }
+    },
+    {
+      "id": "discharge_pipe",
+      "name": "토출관",
+      "group": "discharge",
+      "kind": "pipe",
+      "color": 12745806,
+      "basis": "typical",
+      "notes": "압축기 토출 → 기계실 위쪽을 돌아 응축기 윗단 입구.",
+      "boundsMm": {
+        "min": [
+          -288.17,
+          -208.18,
+          216.82
+        ],
+        "max": [
+          7,
+          135.18,
+          321.17
+        ]
+      }
+    },
+    {
+      "id": "condenser_pipe",
+      "name": "응축관",
+      "group": "condenser",
+      "kind": "pipe",
+      "color": 12745806,
+      "basis": "typical",
+      "notes": "2열×8단 사행. 윗단 뒤열로 들어가 앞열 윗단으로 나옴.",
+      "boundsMm": {
+        "min": [
+          -275,
+          -229.76,
+          129.24
+        ],
+        "max": [
+          169.76,
+          -200.24,
+          299.76
+        ]
+      }
+    },
+    {
+      "id": "liquid_line_pipe",
+      "name": "액관",
+      "group": "liquid_line",
+      "kind": "pipe",
+      "color": 12745806,
+      "basis": "typical",
+      "notes": "응축기 출구 → 드라이어 입구.",
+      "boundsMm": {
+        "min": [
+          -303.17,
+          -228.18,
+          246
+        ],
+        "max": [
+          -275,
+          -146.82,
+          298.17
+        ]
+      }
+    },
+    {
+      "id": "capillary_pipe",
+      "name": "모세관",
+      "group": "capillary",
+      "kind": "pipe",
+      "color": 13666906,
+      "basis": "typical",
+      "notes": "Ø2.0 동관. 드라이어 출구 → 4회 코일 → 후면으로 가서 흡입관에 합류.",
+      "boundsMm": {
+        "min": [
+          -301,
+          -151,
+          103
+        ],
+        "max": [
+          -249.03,
+          283,
+          255.97
+        ]
+      }
+    },
+    {
+      "id": "capillary_hx_pipe",
+      "name": "모세관·흡입관 열교환부",
+      "group": "capillary_hx",
+      "kind": "pipe",
+      "color": 13666906,
+      "basis": "typical",
+      "notes": "모세관을 흡입관에 붙여 후면 단열재 속을 올라가 증발기 입구로.",
+      "boundsMm": {
+        "min": [
+          -251,
+          164,
+          255
+        ],
+        "max": [
+          -222,
+          284,
+          1919
+        ]
+      }
+    },
+    {
+      "id": "evaporator_pipe",
+      "name": "증발관",
+      "group": "evaporator",
+      "kind": "pipe",
+      "color": 13666906,
+      "basis": "typical",
+      "notes": "2열×4단 사행, 입·출구 모두 왼쪽 끝.",
+      "boundsMm": {
+        "min": [
+          -230,
+          120.24,
+          1815.24
+        ],
+        "max": [
+          224.76,
+          169.76,
+          1914.76
+        ]
+      }
+    },
+    {
+      "id": "suction_pipe",
+      "name": "흡입관",
+      "group": "suction",
+      "kind": "pipe",
+      "color": 13666906,
+      "basis": "typical",
+      "notes": "Ø7.94 동관. 증발기 출구 → 후면 단열재 속 수직 하강 → 압축기 흡입구.",
+      "boundsMm": {
+        "min": [
+          -258.97,
+          121.03,
+          206.03
+        ],
+        "max": [
+          -6,
+          286.97,
+          1913.97
+        ]
+      }
+    }
+  ]
+}

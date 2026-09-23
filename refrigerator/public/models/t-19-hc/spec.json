@@ -1,0 +1,1065 @@
+{
+  "schema": "refrigerator-spec/1",
+  "id": "t-19-hc",
+  "meta": {
+    "model": "True T-19-HC",
+    "summary": "1도어 리치인 냉장고. 하부 응축 유닛(핀-튜브 응축기와 팬), 천장 증발기.",
+    "refrigerant": "R290",
+    "source": "https://www.truemfg.com/wp-content/uploads/true-media/spec-sheets/T-19-HC.pdf",
+    "sourceRevision": "spec sheet 1/24",
+    "sourcePages": [
+      2
+    ],
+    "method": "Exterior dimensions follow spec sheet page 2 (inches converted to mm). Bottom-mounted condensing unit and R290 are sourced; internal layout, component shapes and tube sizes are typical for bottom-mount reach-ins, not factory CAD or measurements.",
+    "basisLegend": {
+      "drawing": "dimension or feature stated in the spec sheet",
+      "typical": "industry-typical shape, size and placement"
+    }
+  },
+  "expect": {
+    "overallMm": {
+      "width": 685.8,
+      "depth": 634.21,
+      "height": 2005.01
+    }
+  },
+  "components": [
+    {
+      "id": "cabinet",
+      "type": "cabinet",
+      "name": "외함·내함",
+      "basis": "drawing",
+      "page": 2,
+      "notes": "폭 685.8 × 깊이 622.3(도어 포함) × 본체 높이 1917.7mm, 캐스터 포함 2005.0mm (사양서 2쪽 인치 치수). 벽 두께와 내부 치수는 추정.",
+      "body": {
+        "x": [
+          -342.9,
+          342.9
+        ],
+        "y": [
+          -261.15,
+          311.15
+        ],
+        "z": [
+          87.3125,
+          2005.0125
+        ]
+      },
+      "voids": [
+        {
+          "name": "interior",
+          "x": [
+            -297.9,
+            297.9
+          ],
+          "y": [
+            -262,
+            256.15
+          ],
+          "z": [
+            395,
+            1940
+          ]
+        },
+        {
+          "name": "machine-compartment",
+          "x": [
+            -332.9,
+            332.9
+          ],
+          "y": [
+            -262,
+            312
+          ],
+          "z": [
+            97,
+            330
+          ]
+        }
+      ]
+    },
+    {
+      "id": "door",
+      "type": "cabinet",
+      "name": "단열 도어",
+      "basis": "drawing",
+      "page": 2,
+      "notes": "우측 힌지, 305mm 매립 손잡이(사양서). 두께 50과 손잡이 위치는 추정.",
+      "hinge": [
+        342.9,
+        -311.15,
+        0
+      ],
+      "body": {
+        "x": [
+          -340.9,
+          340.9
+        ],
+        "y": [
+          -311.15,
+          -261.15
+        ],
+        "z": [
+          345,
+          1950
+        ]
+      },
+      "voids": [
+        {
+          "name": "recessed-handle",
+          "x": [
+            -330,
+            -300
+          ],
+          "y": [
+            -312,
+            -296
+          ],
+          "z": [
+            1000,
+            1305
+          ]
+        }
+      ]
+    },
+    {
+      "id": "display",
+      "type": "primitives",
+      "name": "외부 온도 표시창",
+      "group": "cabinet",
+      "color": "#1c2a30",
+      "basis": "drawing",
+      "page": 2,
+      "notes": "외부 온도 표시(사양서). 크기는 추정.",
+      "primitives": [
+        {
+          "box": {
+            "x": [
+              -100,
+              100
+            ],
+            "y": [
+              -263.15,
+              -261.15
+            ],
+            "z": [
+              1965,
+              1990
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "grille",
+      "type": "primitives",
+      "name": "기계실 전면 그릴",
+      "group": "cabinet",
+      "color": "#3a4449",
+      "basis": "typical",
+      "notes": "응축기 흡기용 전면 그릴. 살 배치는 추정.",
+      "primitives": [
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              110,
+              118
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              140,
+              148
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              170,
+              178
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              200,
+              208
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              230,
+              238
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              260,
+              268
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              290,
+              298
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -332.9,
+              332.9
+            ],
+            "y": [
+              -264,
+              -262
+            ],
+            "z": [
+              320,
+              328
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "shelves",
+      "type": "wire-shelves",
+      "name": "선반 3개",
+      "basis": "drawing",
+      "page": 2,
+      "notes": "선반 3개, 평면 치수 581.0 × 463.6mm (사양서). 높이와 철선 간격은 추정.",
+      "rod": {
+        "outer": 2,
+        "inner": 1.2,
+        "count": 25,
+        "inset": 11
+      },
+      "items": [
+        {
+          "z": 800,
+          "x": [
+            -290.5,
+            290.5
+          ],
+          "y": [
+            -255,
+            208.55
+          ]
+        },
+        {
+          "z": 1200,
+          "x": [
+            -290.5,
+            290.5
+          ],
+          "y": [
+            -255,
+            208.55
+          ]
+        },
+        {
+          "z": 1600,
+          "x": [
+            -290.5,
+            290.5
+          ],
+          "y": [
+            -255,
+            208.55
+          ]
+        }
+      ]
+    },
+    {
+      "id": "castors",
+      "type": "primitives",
+      "name": "캐스터·후면 범퍼",
+      "group": "cabinet",
+      "color": "#3a4449",
+      "basis": "drawing",
+      "page": 2,
+      "notes": "Ø64 캐스터, 후면 범퍼 포함 깊이 634.2mm (사양서). 포크 형상은 추정.",
+      "primitives": [
+        {
+          "cylinder": {
+            "from": [
+              -312,
+              -220,
+              32
+            ],
+            "to": [
+              -288,
+              -220,
+              32
+            ],
+            "radius": 32
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -315,
+              -285
+            ],
+            "y": [
+              -240,
+              -200
+            ],
+            "z": [
+              50,
+              87.3125
+            ]
+          }
+        },
+        {
+          "cylinder": {
+            "from": [
+              288,
+              -220,
+              32
+            ],
+            "to": [
+              312,
+              -220,
+              32
+            ],
+            "radius": 32
+          }
+        },
+        {
+          "box": {
+            "x": [
+              285,
+              315
+            ],
+            "y": [
+              -240,
+              -200
+            ],
+            "z": [
+              50,
+              87.3125
+            ]
+          }
+        },
+        {
+          "cylinder": {
+            "from": [
+              -312,
+              260,
+              32
+            ],
+            "to": [
+              -288,
+              260,
+              32
+            ],
+            "radius": 32
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -315,
+              -285
+            ],
+            "y": [
+              240,
+              280
+            ],
+            "z": [
+              50,
+              87.3125
+            ]
+          }
+        },
+        {
+          "cylinder": {
+            "from": [
+              288,
+              260,
+              32
+            ],
+            "to": [
+              312,
+              260,
+              32
+            ],
+            "radius": 32
+          }
+        },
+        {
+          "box": {
+            "x": [
+              285,
+              315
+            ],
+            "y": [
+              240,
+              280
+            ],
+            "z": [
+              50,
+              87.3125
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -300,
+              300
+            ],
+            "y": [
+              311.15,
+              323.05625
+            ],
+            "z": [
+              150,
+              180
+            ]
+          }
+        },
+        {
+          "box": {
+            "x": [
+              -300,
+              300
+            ],
+            "y": [
+              311.15,
+              323.05625
+            ],
+            "z": [
+              1850,
+              1880
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "compressor",
+      "type": "hermetic-compressor",
+      "name": "밀폐형 압축기",
+      "basis": "typical",
+      "notes": "R290 왕복동 밀폐형(약 1/4~1/3HP급) 일반 형상. 쉘 약 210×164×185mm. 하부 응축 유닛 뒤쪽.",
+      "center": [
+        120,
+        170
+      ],
+      "floorZ": 97,
+      "shell": {
+        "width": 210,
+        "depth": 164,
+        "height": 185
+      },
+      "base": {
+        "plateThickness": 3,
+        "grommetHeight": 15,
+        "plate": {
+          "x": [
+            -125,
+            125
+          ],
+          "y": [
+            -90,
+            90
+          ]
+        },
+        "grommet": {
+          "dx": 100,
+          "dy": 68,
+          "radius": 11,
+          "radius2": 9
+        }
+      },
+      "stubs": [
+        {
+          "port": "discharge",
+          "dy": -38,
+          "height": 105,
+          "od": 6.35
+        },
+        {
+          "port": "suction",
+          "dy": 0,
+          "height": 95,
+          "od": 7.94
+        },
+        {
+          "port": "process",
+          "dy": 38,
+          "height": 105,
+          "od": 6.4,
+          "crimp": true
+        }
+      ],
+      "stubPart": {
+        "notes": "토출 Ø6.35 · 흡입 Ø7.94 · 충전관(끝 압착)."
+      },
+      "relay": {
+        "id": "start_relay",
+        "name": "기동 릴레이",
+        "notes": "커버 크기는 일반값.",
+        "x": [
+          -10,
+          60
+        ],
+        "y": [
+          70,
+          105
+        ],
+        "z": [
+          50,
+          110
+        ]
+      }
+    },
+    {
+      "id": "condenser",
+      "type": "fin-tube-coil",
+      "name": "응축기 (핀-튜브)",
+      "basis": "typical",
+      "notes": "하부 전면 그릴 뒤 핀-튜브 응축기. Ø9.52 동관 2열×8단, 알루미늄 핀 3mm 피치.",
+      "color": "#aab4b8",
+      "fins": {
+        "x": [
+          -250,
+          150
+        ],
+        "y": [
+          -235,
+          -195
+        ],
+        "z": [
+          120,
+          310
+        ],
+        "pitch": 3
+      },
+      "tubes": {
+        "od": 9.52,
+        "cols": [
+          -205,
+          -225
+        ],
+        "rows": [
+          295,
+          272,
+          249,
+          226,
+          203,
+          180,
+          157,
+          134
+        ],
+        "bendX": [
+          -265,
+          165
+        ],
+        "inletX": -267,
+        "outletX": -275,
+        "bendRadius": 10
+      }
+    },
+    {
+      "id": "condenser_fan",
+      "type": "axial-fan",
+      "name": "응축기 팬",
+      "basis": "typical",
+      "notes": "Ø200 축류팬. 전면 그릴로 외기를 빨아 응축기를 지나 뒤로 보냄.",
+      "center": [
+        -50,
+        -150,
+        215
+      ],
+      "rpm": 1500,
+      "shroud": {
+        "x": [
+          -215,
+          215
+        ],
+        "y": [
+          -22,
+          -20
+        ],
+        "z": [
+          -95,
+          95
+        ],
+        "opening": 102,
+        "ring": {
+          "radius": 104,
+          "length": 20,
+          "y": -12
+        }
+      },
+      "motor": {
+        "radius": 40,
+        "y": [
+          15,
+          65
+        ]
+      },
+      "brackets": {
+        "y": [
+          40,
+          -12
+        ],
+        "reach": 104
+      },
+      "hub": {
+        "radius": 20,
+        "y": [
+          -10,
+          10
+        ]
+      },
+      "blades": {
+        "count": 4,
+        "width": 40,
+        "thickness": 2,
+        "length": 78,
+        "radius": 58,
+        "pitch": 0.4
+      },
+      "rotor": {
+        "name": "응축기 팬 날개"
+      }
+    },
+    {
+      "id": "drier",
+      "type": "filter-drier",
+      "name": "필터 드라이어",
+      "basis": "typical",
+      "notes": "Ø19×100mm 수직, 위 입구 · 아래 모세관 출구.",
+      "x": -300,
+      "y": -150,
+      "zBot": 130,
+      "zTop": 230,
+      "diameter": 19,
+      "inletOd": 6.4,
+      "outletOd": 3
+    },
+    {
+      "id": "evaporator",
+      "type": "fin-tube-coil",
+      "name": "증발기",
+      "basis": "typical",
+      "notes": "천장 증발기. Ø9.52 동관 2열×4단, 알루미늄 핀 6mm 피치, 400×70×115mm.",
+      "fins": {
+        "x": [
+          -200,
+          200
+        ],
+        "y": [
+          110,
+          180
+        ],
+        "z": [
+          1810,
+          1925
+        ],
+        "pitch": 6
+      },
+      "tubes": {
+        "od": 9.52,
+        "cols": [
+          165,
+          125
+        ],
+        "rows": [
+          1910,
+          1880,
+          1850,
+          1820
+        ],
+        "bendX": [
+          -220,
+          220
+        ],
+        "inletX": -222,
+        "outletX": -230,
+        "bendRadius": 12
+      },
+      "dripTray": {
+        "name": "증발기 물받이",
+        "x": [
+          -225,
+          225
+        ],
+        "y": [
+          100,
+          190
+        ],
+        "z": [
+          1795,
+          1797
+        ],
+        "lip": 7
+      }
+    },
+    {
+      "id": "evaporator_fan",
+      "type": "axial-fan",
+      "name": "증발기 팬",
+      "basis": "typical",
+      "notes": "Ø110 축류팬과 슈라우드. 증발기 앞에서 냉기를 고내로 보냄.",
+      "center": [
+        0,
+        70,
+        1868
+      ],
+      "rpm": 1300,
+      "shroud": {
+        "x": [
+          -230,
+          230
+        ],
+        "y": [
+          8,
+          10
+        ],
+        "z": [
+          -73,
+          72
+        ],
+        "opening": 58,
+        "ring": {
+          "radius": 60,
+          "length": 10,
+          "y": 9
+        }
+      },
+      "motor": {
+        "radius": 25,
+        "y": [
+          12,
+          36
+        ]
+      },
+      "brackets": {
+        "y": [
+          25,
+          10
+        ],
+        "reach": 58
+      },
+      "hub": {
+        "radius": 12,
+        "y": [
+          -7,
+          7
+        ]
+      },
+      "blades": {
+        "count": 5,
+        "width": 20,
+        "thickness": 1.6,
+        "length": 44,
+        "radius": 33,
+        "pitch": 0.35
+      },
+      "rotor": {
+        "name": "증발기 팬 날개"
+      }
+    }
+  ],
+  "circuit": [
+    {
+      "id": "discharge",
+      "name": "토출관",
+      "od": 6.35,
+      "color": "#c27c4e",
+      "bendRadius": 20,
+      "notes": "압축기 토출 → 기계실 위쪽을 돌아 응축기 윗단 입구.",
+      "path": [
+        "compressor.discharge",
+        [
+          -30,
+          132,
+          220
+        ],
+        [
+          -30,
+          132,
+          318
+        ],
+        [
+          -285,
+          132,
+          318
+        ],
+        [
+          -285,
+          -205,
+          318
+        ],
+        [
+          -285,
+          -205,
+          295
+        ],
+        "condenser.in"
+      ]
+    },
+    {
+      "id": "condenser",
+      "name": "응축관",
+      "od": 9.52,
+      "color": "#c27c4e",
+      "notes": "2열×8단 사행. 윗단 뒤열로 들어가 앞열 윗단으로 나옴.",
+      "path": [
+        {
+          "component": "condenser"
+        }
+      ]
+    },
+    {
+      "id": "liquid_line",
+      "name": "액관",
+      "od": 6.35,
+      "color": "#c27c4e",
+      "bendRadius": 15,
+      "notes": "응축기 출구 → 드라이어 입구.",
+      "path": [
+        "condenser.out",
+        [
+          -300,
+          -225,
+          295
+        ],
+        [
+          -300,
+          -150,
+          295
+        ],
+        "drier.in"
+      ]
+    },
+    {
+      "id": "capillary",
+      "name": "모세관",
+      "od": 2,
+      "color": "#d08a5a",
+      "bendRadius": 6,
+      "notes": "Ø2.0 동관. 드라이어 출구 → 4회 코일 → 후면으로 가서 흡입관에 합류.",
+      "path": [
+        "drier.out",
+        [
+          -300,
+          -150,
+          104
+        ],
+        [
+          -300,
+          -95,
+          104
+        ],
+        [
+          -300,
+          -80,
+          125
+        ],
+        {
+          "helix": {
+            "center": [
+              -275,
+              -80,
+              150
+            ],
+            "radius": 25,
+            "turns": 4,
+            "pitch": 3,
+            "startDeg": 270,
+            "extraDeg": 180,
+            "stepsPerTurn": 36
+          }
+        },
+        [
+          -295,
+          -66,
+          175
+        ],
+        [
+          -295,
+          -66,
+          255
+        ],
+        [
+          -250,
+          -66,
+          255
+        ],
+        [
+          -250,
+          283,
+          255
+        ]
+      ]
+    },
+    {
+      "id": "capillary_hx",
+      "name": "모세관·흡입관 열교환부",
+      "od": 2,
+      "color": "#d08a5a",
+      "bendRadius": 6,
+      "notes": "모세관을 흡입관에 붙여 후면 단열재 속을 올라가 증발기 입구로.",
+      "path": [
+        [
+          -250,
+          283,
+          255
+        ],
+        [
+          -250,
+          283,
+          1918
+        ],
+        [
+          -250,
+          165,
+          1918
+        ],
+        [
+          -235,
+          165,
+          1918
+        ],
+        [
+          -235,
+          165,
+          1910
+        ],
+        "evaporator.in"
+      ]
+    },
+    {
+      "id": "evaporator",
+      "name": "증발관",
+      "od": 9.52,
+      "color": "#d08a5a",
+      "notes": "2열×4단 사행, 입·출구 모두 왼쪽 끝.",
+      "path": [
+        {
+          "component": "evaporator"
+        }
+      ]
+    },
+    {
+      "id": "suction",
+      "name": "흡입관",
+      "od": 7.94,
+      "color": "#d08a5a",
+      "bendRadius": 25,
+      "notes": "Ø7.94 동관. 증발기 출구 → 후면 단열재 속 수직 하강 → 압축기 흡입구.",
+      "path": [
+        "evaporator.out",
+        [
+          -255,
+          125,
+          1910
+        ],
+        [
+          -255,
+          283,
+          1910
+        ],
+        [
+          -255,
+          283,
+          210
+        ],
+        [
+          -255,
+          170,
+          210
+        ],
+        "compressor.suction"
+      ]
+    }
+  ],
+  "checks": {
+    "minClearanceMm": 1,
+    "joinExclusionMm": 30,
+    "touching": [
+      [
+        "capillary",
+        "suction"
+      ],
+      [
+        "capillary_hx",
+        "suction"
+      ]
+    ]
+  }
+}

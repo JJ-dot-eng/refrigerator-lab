@@ -2,12 +2,30 @@
 
 모델별 근거, 가정, 한계와 데이터 재생성 방법을 정리한다. 전체 소개와 실행 방법은 [저장소 README](../README.md)를 본다.
 
+- [사양서 기반 생성기 (`/models`)](#사양서-기반-생성기-models)
 - [HR24B (`/`)](#hoshizaki-hr24b-)
 - [True T-19-HC (`/reference`)](#true-t-19-hc-reference)
 - [MONO 120 (`/lab`)](#mono-120-lab)
 - [제조사 문서](#제조사-문서-저장소-미포함)
 - [배포](#github-pages)
 - [검증](#검증)
+
+## 사양서 기반 생성기 (`/models`)
+
+냉장고 한 대를 사양서 JSON 하나로 기술하고, `generator/`가 외함·부품·냉매 배관을 만들어 자동 검사한다(회로 연결, 배관 간격, 부품 관통, 전체 치수). 양식과 부품 종류는 [specs/README.md](specs/README.md)에 있다.
+
+```bash
+npm run generate
+```
+
+| 모델 | 사양서 | 형태 |
+|---|---|---|
+| HR24B | `specs/hr24b.json` | 언더카운터, 후면 와이어 응축기, 응축수 팬 가열 루프, 좌측 벽 둘레 액관 |
+| T-19-HC | `specs/t-19-hc.json` | 리치인, 하부 응축 유닛(핀-튜브 응축기와 팬), 천장 증발기 |
+
+T-19-HC 사양서는 외형 치수(사양서 2쪽), 하부 응축 유닛, R290만 제조사 자료이고 내부 배치는 업계 일반값이다. `/reference` 화면의 T-19-HC 모델(FreeCAD 재구성)과는 별개다.
+
+`/models` 화면은 `public/models/index.json`에 있는 모델을 모두 보여 준다. 3D 화면(`components/model-scene.tsx`)은 모델 크기에 맞춰 카메라를 자동으로 맞춘다.
 
 ## Hoshizaki HR24B (`/`)
 
@@ -41,13 +59,7 @@
 
 ### 데이터
 
-`public/hr24/generate_hr24.mjs`(Node, three.js)가 `model.json`, `model.obj`, `routes.json`, `metadata.json`, `verification.json`을 만든다. 생성할 때 회로 연결, 배관 간 간섭(최소 1mm, 모세관-흡입관 접합부 제외), 압축기 쉘 관통을 검사한다. `design.zip`은 이 파일들과 생성 스크립트를 묶은 것이다.
-
-```bash
-node public/hr24/generate_hr24.mjs
-```
-
-좌표계는 mm, 제품 전면 기준 +X 오른쪽, +Y 후면, +Z 위.
+사양서 [specs/hr24b.json](specs/hr24b.json)에서 범용 생성기(`generator/`)로 만든다. 결과는 `public/models/hr24b/`(`model.json`, `model.obj`, `routes.json`, `metadata.json`, `verification.json`, `spec.json`). 좌표계는 mm, 제품 전면 기준 +X 오른쪽, +Y 후면, +Z 위.
 
 ## True T-19-HC (`/reference`)
 
@@ -115,7 +127,7 @@ node public/hr24/generate_hr24.mjs
 ## 검증
 
 ```bash
-npm test          # 5개 검증 스크립트
+npm test          # 6개 검증 스크립트
 npm run lint
 npx tsc --noEmit
 npm run build
@@ -128,6 +140,7 @@ npm run build
 | `tests/circuit-properties.mjs` | T-19-HC: 40개 운전점 PH 물성, 상변화, 구간 연속성 |
 | `tests/piping.mjs` | T-19-HC: 닫힌 회로, 포트 좌표, 길이·관경 |
 | `tests/hr24.mjs` | HR24B: 도면 배치, 압축기 크기, 회로 순서·연결, 관경, 배관 간격, 메쉬 |
+| `tests/models.mjs` | 생성기: 모든 사양서 생성·검사 통과, 커밋된 결과가 최신인지, T-19-HC 하부 배치, 잘못된 사양서 6종 거부 |
 
 ## 출처
 

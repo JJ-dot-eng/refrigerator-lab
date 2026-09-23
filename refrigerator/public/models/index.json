@@ -1,0 +1,16 @@
+{
+  "models": [
+    {
+      "id": "hr24b",
+      "model": "Hoshizaki HR24B",
+      "refrigerant": "R600a",
+      "summary": "1도어 언더카운터 냉장고. 후면 와이어 응축기, 하부 기계실, 천장 증발기."
+    },
+    {
+      "id": "t-19-hc",
+      "model": "True T-19-HC",
+      "refrigerant": "R290",
+      "summary": "1도어 리치인 냉장고. 하부 응축 유닛(핀-튜브 응축기와 팬), 천장 증발기."
+    }
+  ]
+}

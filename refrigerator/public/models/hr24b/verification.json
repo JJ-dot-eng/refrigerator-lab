@@ -1,17 +1,12 @@
 {
   "valid": true,
+  "specId": "hr24b",
   "partCount": 28,
-  "triangles": 54812,
+  "triangles": 54884,
   "overallWithHandleMm": {
     "width": 595,
     "depth": 648,
     "height": 805
-  },
-  "sourceDimensionsMm": {
-    "width": 595,
-    "depthWithoutHandle": 624,
-    "height": 805,
-    "handleProjection": 24
   },
   "circuitClosed": true,
   "pipeClearanceMm": {
@@ -63,5 +58,6 @@
     "evaporator": 2824,
     "suction": 944
   },
+  "failures": [],
   "notManufacturerNativeCAD": true
 }

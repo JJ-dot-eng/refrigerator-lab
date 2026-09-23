@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-const read=n=>JSON.parse(fs.readFileSync(new URL('../public/hr24/'+n,import.meta.url)));
+const read=n=>JSON.parse(fs.readFileSync(new URL('../public/models/hr24b/'+n,import.meta.url)));
 const model=read('model.json'),meta=read('metadata.json'),verified=read('verification.json'),circuit=read('routes.json');
 assert.equal(meta.model,'Hoshizaki HR24B');assert.equal(meta.refrigerant,'R600a');assert.ok(verified.valid&&verified.circuitClosed);
 assert.deepEqual(verified.overallWithHandleMm,{width:595,depth:648,height:805});
-function bounds(id){const p=model.parts.find(p=>p.id===id);assert.ok(p,id);const v=p.positions;return [0,1,2].map(axis=>{const a=v.filter((_,i)=>i%3===axis);return [Math.min(...a),Math.max(...a)];});}
+// Bounds of a component's own solid (not its pipes or sub-parts).
+function bounds(id){const p=model.parts.find(p=>p.id===id);assert.ok(p,id);return [0,1,2].map(axis=>[p.boundsMm.min[axis],p.boundsMm.max[axis]]);}
 const size=b=>b.map(([a,c])=>c-a);
-const condenser=bounds('condenser'),comp=bounds('compressor'),pan=bounds('pan'),drier=bounds('drier'),evap=bounds('evaporator'),fan=bounds('evaporator_fan');
+const condenser=bounds('condenser_pipe'),comp=bounds('compressor'),pan=bounds('pan'),drier=bounds('drier'),evap=bounds('evaporator'),fan=bounds('evaporator_fan');
 // Placement from service p7 rear assembly and p8 section.
 assert.ok(condenser[2][0]>pan[2][1],'condenser above compressor and pan');
 assert.ok(condenser[2][1]-condenser[2][0]>condenser[1][1]-condenser[1][0],'vertical rear condenser');

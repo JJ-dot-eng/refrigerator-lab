@@ -1,0 +1,46 @@
+{
+  "valid": true,
+  "specId": "t-19-hc",
+  "partCount": 25,
+  "triangles": 50788,
+  "overallWithHandleMm": {
+    "width": 685.8,
+    "depth": 634.21,
+    "height": 2005.01
+  },
+  "circuitClosed": true,
+  "pipeClearanceMm": {
+    "discharge|condenser": 22.6,
+    "discharge|liquid_line": 10,
+    "discharge|capillary": 58.8,
+    "discharge|capillary_hx": 146.8,
+    "discharge|evaporator": 1494.1,
+    "discharge|suction": 32.1,
+    "condenser|liquid_line": 22.5,
+    "condenser|capillary": 65.6,
+    "condenser|capillary_hx": 482.2,
+    "condenser|evaporator": 1550.8,
+    "condenser|suction": 366.3,
+    "liquid_line|capillary": 80,
+    "liquid_line|capillary_hx": 431.7,
+    "liquid_line|evaporator": 1546.5,
+    "liquid_line|suction": 321.6,
+    "capillary|capillary_hx": 341,
+    "capillary|evaporator": 1559.5,
+    "capillary|suction": 0,
+    "capillary_hx|evaporator": 26.2,
+    "capillary_hx|suction": 0,
+    "evaporator|suction": 24.3
+  },
+  "pipeLengthsMm": {
+    "discharge": 738,
+    "condenser": 7120,
+    "liquid_line": 139,
+    "capillary": 1302,
+    "capillary_hx": 1809,
+    "evaporator": 3688,
+    "suction": 2212
+  },
+  "failures": [],
+  "notManufacturerNativeCAD": true
+}

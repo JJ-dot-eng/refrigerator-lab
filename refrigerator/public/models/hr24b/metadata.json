@@ -1,5 +1,6 @@
 {
   "model": "Hoshizaki HR24B",
+  "summary": "1도어 언더카운터 냉장고. 후면 와이어 응축기, 하부 기계실, 천장 증발기.",
   "refrigerant": "R600a",
   "chargeOz": 2.8,
   "supply": "115V/60Hz/1ph, 4A",
@@ -20,12 +21,14 @@
     "drawing": "position/shape visible in the service drawings",
     "typical": "industry-typical shape and size at the drawing position"
   },
+  "specId": "hr24b",
   "parts": [
     {
       "id": "cabinet",
       "name": "외함·내함",
       "color": 12569552,
       "basis": "drawing",
+      "page": 8,
       "notes": "595 W × 624 D(도어 포함) × 805 H, 내부 폭 460·높이 475·깊이 450/330 (8쪽). 벽 두께 분할은 추정.",
       "boundsMm": {
         "min": [
@@ -45,6 +48,7 @@
       "name": "단열 도어",
       "color": 12569552,
       "basis": "drawing",
+      "page": 7,
       "notes": "오른쪽 힌지 (7쪽). 두께 50은 추정.",
       "boundsMm": {
         "min": [
@@ -65,6 +69,7 @@
       "group": "door",
       "color": 10135469,
       "basis": "drawing",
+      "page": 8,
       "notes": "돌출 24mm (8쪽).",
       "boundsMm": {
         "min": [
@@ -85,6 +90,7 @@
       "group": "cabinet",
       "color": 1845808,
       "basis": "drawing",
+      "page": 7,
       "notes": "제어부 위치 (7쪽).",
       "boundsMm": {
         "min": [
@@ -104,6 +110,7 @@
       "name": "선반 3개",
       "color": 14081504,
       "basis": "drawing",
+      "page": 7,
       "notes": "큰 선반 1 + 작은 선반 2, 내부 단차에 맞춤 (7·8쪽).",
       "boundsMm": {
         "min": [
@@ -124,6 +131,7 @@
       "group": "cabinet",
       "color": 3818569,
       "basis": "drawing",
+      "page": 8,
       "notes": "높이 20 (8쪽).",
       "boundsMm": {
         "min": [
@@ -143,6 +151,7 @@
       "name": "밀폐형 압축기",
       "color": 1975078,
       "basis": "typical",
+      "page": 7,
       "notes": "소형 R600a 왕복동 밀폐형(약 1/5HP급) 일반 형상. 쉘 약 200×155×177mm, 상·하 용접쉘 이음부 포함. 위치는 7·8쪽 후면 하부 기계실.",
       "boundsMm": {
         "min": [
@@ -163,6 +172,7 @@
       "group": "compressor",
       "color": 2962230,
       "basis": "typical",
+      "page": 7,
       "notes": "받침판과 방진고무 4개.",
       "boundsMm": {
         "min": [
@@ -183,6 +193,7 @@
       "group": "compressor",
       "color": 12745806,
       "basis": "typical",
+      "page": 7,
       "notes": "토출 Ø4.76 · 흡입 Ø6.35 · 충전관(끝 압착).",
       "boundsMm": {
         "min": [
@@ -202,6 +213,7 @@
       "name": "기동 릴레이·과부하 보호기",
       "color": 3817798,
       "basis": "drawing",
+      "page": 7,
       "notes": "7쪽 Start Relay 표기 위치. 커버 크기는 일반값.",
       "boundsMm": {
         "min": [
@@ -221,6 +233,7 @@
       "name": "응축수 증발 팬",
       "color": 9081750,
       "basis": "drawing",
+      "page": 7,
       "notes": "7쪽: 압축기 위 응축수 받침. 220×144×40mm는 일반값.",
       "boundsMm": {
         "min": [
@@ -241,6 +254,7 @@
       "group": "pan",
       "color": 6055016,
       "basis": "typical",
+      "page": 7,
       "notes": "압축기 상부 쉘에 걸친 받침.",
       "boundsMm": {
         "min": [
@@ -261,6 +275,7 @@
       "group": "condenser",
       "color": 1909028,
       "basis": "typical",
+      "page": 7,
       "notes": "양면 Ø1.5 강선 7mm 피치, 좌우 브래킷.",
       "boundsMm": {
         "min": [
@@ -280,6 +295,7 @@
       "name": "필터 드라이어",
       "color": 13214042,
       "basis": "drawing",
+      "page": 7,
       "notes": "7쪽 후면 오른쪽 수직. Ø19×100mm 동 쉘, 위 입구 Ø6.35 · 아래 모세관 출구 (일반값).",
       "boundsMm": {
         "min": [
@@ -299,6 +315,7 @@
       "name": "증발기 핀",
       "color": 13620954,
       "basis": "typical",
+      "page": 8,
       "notes": "알루미늄 핀 6mm 피치, 300×55×85mm. 위치는 8쪽 단면의 천장 냉각부.",
       "boundsMm": {
         "min": [
@@ -319,6 +336,7 @@
       "group": "evaporator",
       "color": 10134696,
       "basis": "typical",
+      "page": 8,
       "notes": "제상수 받침.",
       "boundsMm": {
         "min": [
@@ -338,6 +356,7 @@
       "name": "증발기 팬·슈라우드",
       "color": 2831160,
       "basis": "typical",
+      "page": 8,
       "notes": "Ø100 축류팬, 셰이디드폴 모터, 슈라우드. 8쪽 단면에서 증발기 앞.",
       "boundsMm": {
         "min": [
@@ -371,6 +390,7 @@
       },
       "color": 3884620,
       "basis": "typical",
+      "page": 8,
       "notes": "5날 축류팬 날개.",
       "boundsMm": {
         "min": [
@@ -390,6 +410,7 @@
       "name": "응축수 배수호스",
       "color": 15001830,
       "basis": "drawing",
+      "page": 7,
       "notes": "7쪽 Condensate Drain Line: 물받이 → 팬.",
       "boundsMm": {
         "min": [
@@ -405,11 +426,13 @@
       }
     },
     {
-      "id": "discharge",
+      "id": "discharge_pipe",
       "name": "토출관",
+      "group": "discharge",
       "kind": "pipe",
       "color": 11893066,
       "basis": "typical",
+      "page": 9,
       "notes": "압축기 토출 → 응축수 팬. Ø4.76 동도금 강관.",
       "boundsMm": {
         "min": [
@@ -425,11 +448,13 @@
       }
     },
     {
-      "id": "pan_loop",
+      "id": "pan_loop_pipe",
       "name": "팬 가열 루프",
+      "group": "pan_loop",
       "kind": "pipe",
       "color": 11893066,
       "basis": "typical",
+      "page": 9,
       "notes": "토출 가스가 팬 바닥을 왕복하며 응축수를 증발시킴 (9쪽 Condensate Pan).",
       "boundsMm": {
         "min": [
@@ -445,11 +470,13 @@
       }
     },
     {
-      "id": "condenser_feed",
+      "id": "condenser_feed_pipe",
       "name": "응축기 입구관",
+      "group": "condenser_feed",
       "kind": "pipe",
       "color": 11893066,
       "basis": "typical",
+      "page": 9,
       "notes": "팬 루프 출구 → 후면 응축기 첫 열.",
       "boundsMm": {
         "min": [
@@ -465,12 +492,13 @@
       }
     },
     {
-      "id": "condenser",
+      "id": "condenser_pipe",
       "name": "후면 응축관",
       "group": "condenser",
       "kind": "pipe",
       "color": 1909028,
       "basis": "typical",
+      "page": 7,
       "notes": "12열 수직 사행 Ø4.76 강관 (7쪽 후면 설치도 형상).",
       "boundsMm": {
         "min": [
@@ -486,11 +514,13 @@
       }
     },
     {
-      "id": "perimeter",
+      "id": "perimeter_pipe",
       "name": "좌측 벽 둘레 액관",
+      "group": "perimeter",
       "kind": "pipe",
       "color": 11893066,
       "basis": "typical",
+      "page": 9,
       "notes": "응축기 출구 → 왼쪽 벽 속 문틀 둘레(결로 방지) → 드라이어 입구. 벽 발포 단열재 속 매립 (9쪽 Left Side Perimeter).",
       "boundsMm": {
         "min": [
@@ -506,11 +536,13 @@
       }
     },
     {
-      "id": "capillary",
+      "id": "capillary_pipe",
       "name": "모세관",
+      "group": "capillary",
       "kind": "pipe",
       "color": 13666906,
       "basis": "typical",
+      "page": 7,
       "notes": "Ø2.0(내경 약 0.7) 동관. 드라이어 출구 → 4회 감은 코일 → 흡입관에 합류 (7쪽 Capillary Tube).",
       "boundsMm": {
         "min": [
@@ -526,11 +558,13 @@
       }
     },
     {
-      "id": "capillary_hx",
+      "id": "capillary_hx_pipe",
       "name": "모세관·흡입관 열교환부",
+      "group": "capillary_hx",
       "kind": "pipe",
       "color": 13666906,
       "basis": "typical",
+      "page": 9,
       "notes": "모세관을 흡입관에 붙여 후면 단열재 속을 올라가 증발기 입구로. 액 과냉과 흡입가스 가열 (9쪽 점선 구간).",
       "boundsMm": {
         "min": [
@@ -546,11 +580,13 @@
       }
     },
     {
-      "id": "evaporator",
+      "id": "evaporator_pipe",
       "name": "증발관",
+      "group": "evaporator",
       "kind": "pipe",
       "color": 13666906,
       "basis": "typical",
+      "page": 8,
       "notes": "Ø7.94 동관 2열×4단 사행, 입·출구 모두 왼쪽 끝.",
       "boundsMm": {
         "min": [
@@ -566,11 +602,13 @@
       }
     },
     {
-      "id": "suction",
+      "id": "suction_pipe",
       "name": "흡입관",
+      "group": "suction",
       "kind": "pipe",
       "color": 13666906,
       "basis": "typical",
+      "page": 9,
       "notes": "Ø6.35 동관. 증발기 출구 → 후면 단열재 속 수직 하강 → 압축기 흡입구.",
       "boundsMm": {
         "min": [
