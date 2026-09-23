@@ -12,17 +12,22 @@
 | `/reference` | **True T-19-HC** | 제조사 사양서 치수로 만든 외형 모델과, 40개 운전점의 R290 냉동 사이클(P-h 선도), 24시간 냉각 실험. |
 | `/lab` | **MONO 120** | 120L 가상 설계. 가상 제어기, 문 개방·고장·정전 시험, 배선 하네스와 I/O 참조 기판. |
 
-## 실행
+## 사용하기
 
-Node.js 22.13 이상이 필요합니다.
+설치할 필요 없이 **https://jj-dot-eng.github.io/refrigerator-lab/** 에 접속하면 됩니다. PC 브라우저(Chrome, Edge 등)를 권장합니다.
+
+## 직접 실행 (개발용)
+
+코드를 수정하거나 내 PC에서 돌리려면 Git과 Node.js 22.13 이상이 필요합니다.
 
 ```bash
-cd refrigerator
+git clone https://github.com/JJ-dot-eng/refrigerator-lab.git
+cd refrigerator-lab/refrigerator
 npm install
 npm run dev
 ```
 
-http://localhost:3000 을 엽니다. Windows에서는 `Start-MONO120.cmd`를 실행해도 됩니다.
+브라우저에서 http://localhost:3000 을 엽니다. Windows에서는 `npm install` 후 저장소 폴더의 `Start-MONO120.cmd`를 더블클릭해도 됩니다.
 
 검사: `npm test`, `npm run lint`, `npx tsc --noEmit`, `npm run build`
 
