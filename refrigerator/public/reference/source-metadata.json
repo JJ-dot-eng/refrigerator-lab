@@ -1,0 +1,66 @@
+{
+  "model": "True T-19-HC",
+  "sourceUrl": "https://www.truemfg.com/wp-content/uploads/true-media/spec-sheets/T-19-HC.pdf",
+  "sourcePage": 2,
+  "reconstructed": true,
+  "notManufacturerNativeCAD": true,
+  "dimensions": {
+    "valid": true,
+    "partCount": 19,
+    "triangleCount": 50994,
+    "measuredBoundsMm": {
+      "width": 685.8,
+      "depth": 634.20625,
+      "height": 2005.0124999999998,
+      "zMin": 0.0
+    },
+    "cabinetBoundsMm": {
+      "width": 685.8,
+      "depth": 622.3,
+      "cabinetHeight": 1917.6999999999998,
+      "castorRise": 87.3125,
+      "totalHeight": 2005.0124999999998
+    },
+    "shelfBoundsMm": {
+      "width": 581.025,
+      "depth": 463.54999999999995,
+      "tessellatedBoundToleranceMm": 0.01
+    },
+    "sourceDiscrepancy": "Page 1 H=75.25 in and castor allowance 3.25 in; page 2 H=75.5 in and castor rise 3 7/16 in. Reconstruction follows page 2 imperial plan dimensions. Printed rounded metric values also differ.",
+    "cabinetInterferenceVolumesMm3": {
+      "shelf_1": 0.0,
+      "shelf_2": 0.0,
+      "shelf_3": 0.0,
+      "compressor": 0.0,
+      "condenser": 0.0,
+      "condenser_fan": 0.0,
+      "evaporator": 0.0
+    },
+    "noManufacturerNativeCAD": true
+  },
+  "sourced": [
+    "Overall width/cabinet depth/cabinet height/castor rise/bumper depth from page 2 inches",
+    "3 shelves and imperial shelf plan dimensions",
+    "305 mm recessed handle",
+    "External temperature display",
+    "Bottom mounted condensing unit",
+    "R290 refrigerant",
+    "64 mm rounded castor diameter"
+  ],
+  "estimated": [
+    "Insulation thickness",
+    "Door thickness and reveal",
+    "Fascia/grille heights and slat layout",
+    "Handle width/depth/placement",
+    "Shelf heights/wire spacing/rod sizes",
+    "All internal compressor/condenser/evaporator geometry",
+    "Castor fork and wheelbase"
+  ],
+  "excluded": [
+    "PCB",
+    "MCU",
+    "Harness",
+    "EEPROM",
+    "Undocumented manufacturer internal control circuitry"
+  ]
+}

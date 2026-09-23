@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {advance, defaults, initialState, interpolate} from '../lib/simulation.ts';
+const table=JSON.parse(fs.readFileSync(new URL('../public/design/cycle-table.json',import.meta.url),'utf8'));
+const c=interpolate(table,-15,40);
+assert.ok(Math.abs(c.qEvapJkg*.00045-113.9538408423)<1e-6);
+assert.ok(Math.abs((c.h1-c.h4)-c.qEvapJkg)<1e-7);
+assert.ok(Math.abs(c.cop-c.qEvapJkg/c.workElectricJkg)<1e-10);
+const s=initialState();advance(s,defaults,table,86400);
+assert.ok(s.air>=2.9&&s.air<=5.1,`24h cabinet temp ${s.air}`);
+assert.ok(s.food>=2.9&&s.food<=5.1,`24h food temp ${s.food}`);
+assert.ok(s.cycles>5);
+const stored=(s.air-25)*20000+(s.food-25)*5*3500;
+assert.ok(Math.abs(stored-(s.heatInWh-s.removedWh)*3600)<1e-5,'thermal energy conservation');
+const opened=structuredClone(s);advance(opened,{...defaults,door:true},table,1800);
+assert.ok(opened.air>s.air+5,'open door must warm cabinet');
+for(const fault of ['sensor','communication','fan']){const t=initialState();advance(t,defaults,table,60);assert.equal(t.run,true);advance(t,{...defaults,fault},table,1);assert.equal(t.run,false);assert.equal(t.cooling,0);advance(t,defaults,table,179);assert.equal(t.run,false);advance(t,defaults,table,2);assert.equal(t.run,true);}
+const off=initialState();advance(off,{...defaults,power:false},table,3600);assert.equal(off.wh,0);assert.equal(off.run,false);assert.equal(off.air,25);
+const hot=initialState();advance(hot,{...defaults,ambient:40},table,86400);assert.ok(Number.isFinite(hot.air));assert.ok(hot.wh>s.wh,'hot ambient increases consumption');
+assert.throws(()=>advance(s,defaults,table,-1));
+console.log(JSON.stringify({checks:'PASS: cycle, energy balance, thermostat, door, 3 faults, restart delay, power off, hot ambient',after24h:{air:s.air,food:s.food,wh:s.wh,cycles:s.cycles},openDoor30min:opened.air,hotAmbientWh:hot.wh},null,2));

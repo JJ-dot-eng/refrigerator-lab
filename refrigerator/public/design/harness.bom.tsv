@@ -1,0 +1,7 @@
+Id	Description	Qty	Unit	Designators
+1	Cable, 2 wires	2.7	m	W_DOOR, W_EVAP, W_NTC
+2	Cable, 4 wires	0.08	m	W_MEMORY
+3	Cable, 5 wires	0.35	m	W_DRIVE
+4	Connector, 2 pins	6		CABINET_SENSOR, DOOR_SWITCH, EVAP_SENSOR, MAIN_DOOR, MAIN_EVAP, MAIN_NTC
+5	Connector, 4 pins	2		EEPROM, MAIN_MEMORY
+6	Connector, 5 pins	2		MAIN_DRIVE, VIRTUAL_INVERTER

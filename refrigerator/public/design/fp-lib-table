@@ -1,0 +1,1 @@
+(fp_lib_table (lib (name "ReferenceHeaders") (type "KiCad") (uri "${KIPRJMOD}/ReferenceHeaders.pretty") (options "") (descr "Generated through-hole reference headers")))

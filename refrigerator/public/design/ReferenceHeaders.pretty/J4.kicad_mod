@@ -1,0 +1,67 @@
+(footprint "J4"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(property "Reference" "J4"
+		(at -4 0 0)
+		(layer "F.SilkS")
+		(uuid "25437b6c-929e-4adc-9676-78a023f40d07")
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+	)
+	(property "Value" "SIMULATION INTERFACE"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8f1efbe1-b3e9-4722-b229-1b6f92a39560")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "7d49b057-293a-4366-8947-1c4d4e42ba70")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ad6d4f81-afd1-4c5a-9401-6e9db1a62dfb")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(duplicate_pad_numbers_are_jumpers no)
+	(pad "1" thru_hole circle
+		(at 0 0)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "70436b83-7685-40e8-948d-3cfb48725989")
+	)
+	(pad "2" thru_hole circle
+		(at 0 2.54)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "7b8505cb-76d8-4415-9d7a-8ed3e8ebed11")
+	)
+	(embedded_fonts no)
+)

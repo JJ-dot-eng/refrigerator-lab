@@ -1,0 +1,118 @@
+{
+  "name": "1도어 120L 개념 설계",
+  "revision": "simulation-concept-1",
+  "units": "mm",
+  "dimensions": {
+    "width": 550,
+    "depth": 580,
+    "height": 1000,
+    "wallMinimum": 50,
+    "doorThickness": 60
+  },
+  "usableVolume": {
+    "cavityL": 137.7,
+    "compartmentIntrusionL": 17.82,
+    "shelvesDisplacementL": 2.1675,
+    "beforeShelvesL": 119.88,
+    "afterShelvesL": 117.7125,
+    "note": "Nominal 120 L concept; geometric air-space estimate, not standardized storage-volume certification. Evaporator and smaller fittings reduce it further."
+  },
+  "coordinateSystem": "X width, Y rear positive, Z upward; floor Z=0. Cabinet front Y=-260, exterior door front Y=-320, cabinet rear Y=260; condenser envelope protrudes to Y=277.5.",
+  "pcb": {
+    "width": 95,
+    "height": 60,
+    "thickness": 1.6,
+    "voltage": "3.3V logic, 5V virtual supply",
+    "status": "functional connector reference, not production-ready"
+  },
+  "pinmap": [
+    {
+      "id": "J1",
+      "purpose": "virtual power input",
+      "pins": [
+        "5V",
+        "GND"
+      ]
+    },
+    {
+      "id": "J2",
+      "purpose": "cabinet NTC divider",
+      "pins": [
+        "ADC_CABINET",
+        "GND"
+      ]
+    },
+    {
+      "id": "J3",
+      "purpose": "evaporator NTC divider",
+      "pins": [
+        "ADC_EVAP",
+        "GND"
+      ]
+    },
+    {
+      "id": "J4",
+      "purpose": "door switch",
+      "pins": [
+        "DOOR_GPIO_PULLUP",
+        "GND"
+      ]
+    },
+    {
+      "id": "J5",
+      "purpose": "virtual inverter logic interface",
+      "pins": [
+        "3V3_LOGIC_REF",
+        "GND",
+        "UART_TX",
+        "UART_RX",
+        "ENABLE"
+      ]
+    },
+    {
+      "id": "J6",
+      "purpose": "virtual EEPROM I2C",
+      "pins": [
+        "3V3",
+        "GND",
+        "SCL",
+        "SDA"
+      ]
+    }
+  ],
+  "virtualMCU": "Behavioral control state machine; not instruction-set or pin-electrical emulation",
+  "coolingNominal": {
+    "evaporatingC": -15,
+    "condensingC": 40,
+    "pLowPa": 89053.08324821662,
+    "pHighPa": 531207.8857712329,
+    "h1Jkg": 541940.5908641572,
+    "h2Jkg": 655547.1626647959,
+    "h3Jkg": 288709.83343685773,
+    "h4Jkg": 288709.83343685773,
+    "s1JkgK": 2328.403525218627,
+    "qSpecificJkg": 253230.75742729945,
+    "workSpecificJkg": 113606.57180063869,
+    "coolingW": 113.95384084228475,
+    "shaftPowerW": 51.12295731028741,
+    "electricalPowerW": 60.144655659161664,
+    "condenserHeatW": 165.07679815257217,
+    "motorLossW": 9.021698348874253,
+    "cop": 1.894662785801925,
+    "dischargeC": 64.55860486938906
+  },
+  "validation": {
+    "gridPoints": 48,
+    "cycleEnergyBalanceToleranceW": 1e-8,
+    "cadSolidCount": 11
+  },
+  "simulation": {
+    "cabinetCapacityJPerK": 20000,
+    "foodMassKg": 5,
+    "foodSpecificHeatJPerKgK": 3500,
+    "closedDoorWPerK": 0.7,
+    "openDoorExtraWPerK": 12,
+    "foodCouplingWPerK": 5,
+    "scope": "two-temperature lumped system, virtual behavioral controllers"
+  }
+}

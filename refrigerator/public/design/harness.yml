@@ -1,0 +1,61 @@
+metadata:
+  title: One-door refrigerator virtual low-voltage harness
+  revision: '1'
+connectors:
+  MAIN_NTC:
+    pinlabels: [ADC_CABINET, GND]
+  CABINET_SENSOR:
+    pinlabels: [NTC_A, NTC_B]
+  MAIN_EVAP:
+    pinlabels: [ADC_EVAP, GND]
+  EVAP_SENSOR:
+    pinlabels: [NTC_A, NTC_B]
+  MAIN_DOOR:
+    pinlabels: [DOOR_GPIO_PULLUP, GND]
+  DOOR_SWITCH:
+    pinlabels: [SWITCH, GND]
+  MAIN_DRIVE:
+    pinlabels: [3V3_LOGIC_REF, GND, TX, RX, ENABLE]
+  VIRTUAL_INVERTER:
+    pinlabels: [LOGIC_REF, GND, RX, TX, ENABLE]
+  MAIN_MEMORY:
+    pinlabels: [3V3, GND, SCL, SDA]
+  EEPROM:
+    pinlabels: [VCC, GND, SCL, SDA]
+cables:
+  W_NTC:
+    wirecount: 2
+    length: 0.9
+  W_EVAP:
+    wirecount: 2
+    length: 0.7
+  W_DOOR:
+    wirecount: 2
+    length: 1.1
+  W_DRIVE:
+    wirecount: 5
+    length: 0.35
+  W_MEMORY:
+    wirecount: 4
+    length: 0.08
+connections:
+  -
+    - MAIN_NTC: [1, 2]
+    - W_NTC: [1, 2]
+    - CABINET_SENSOR: [1, 2]
+  -
+    - MAIN_EVAP: [1, 2]
+    - W_EVAP: [1, 2]
+    - EVAP_SENSOR: [1, 2]
+  -
+    - MAIN_DOOR: [1, 2]
+    - W_DOOR: [1, 2]
+    - DOOR_SWITCH: [1, 2]
+  -
+    - MAIN_DRIVE: [1, 2, 3, 4, 5]
+    - W_DRIVE: [1, 2, 3, 4, 5]
+    - VIRTUAL_INVERTER: [1, 2, 3, 4, 5]
+  -
+    - MAIN_MEMORY: [1, 2, 3, 4]
+    - W_MEMORY: [1, 2, 3, 4]
+    - EEPROM: [1, 2, 3, 4]
