@@ -71,7 +71,7 @@ export default function EditorPage(){
   <div className="ed-editor">{current?<><h2>{current.name} <small>{String(current.type??'냉매 배관')} · {current.id}</small></h2>
    {typeof current.notes==='string'&&<p className="ed-desc">{current.notes}</p>}
    <Fields value={current} path={currentPath} onChange={change} pathList={circuitIndex>=0}/>
-   <p className="ed-help">단위 mm. 좌표는 정면 기준 X 오른쪽, Y 뒤쪽, Z 위. 숫자 칸에서 ↑↓는 1mm, Shift+↑↓는 10mm씩 바꿉니다.{circuitIndex>=0&&' 경로의 ＋는 경유점을 추가하고 ✕는 삭제합니다.'}</p></>
+   <p className="ed-help">단위 mm. 좌표는 정면 기준 X 오른쪽, Y 뒤쪽, Z 위. 숫자 칸에서 ↑↓는 1mm, Shift+↑↓는 10mm씩 바꿉니다.{circuitIndex>=0&&' 경로의 ＋는 경유점, ⤳는 자동 경로 구간(부품과 다른 배관을 피해 경로를 찾음)을 추가하고 ✕는 삭제합니다. 포트 기준 점(port + offset)은 부품을 옮기면 함께 움직입니다.'}</p></>
    :<p className="ed-desc">왼쪽 목록이나 3D 화면에서 부품을 고르세요.</p>}</div>
  </section>
  <section className="hr-source ed-side"><h2>검사 결과</h2>

@@ -2,6 +2,7 @@
 // build(spec) -> {parts, routes, verification, metadata, errors}
 import {T, V, P, fillet, sweep, length, segDist} from './geometry.mjs';
 import {BUILDERS} from './builders.mjs';
+import {routePath} from './router.mjs';
 
 const isPoint = a => Array.isArray(a) && a.length === 3 && a.every(Number.isFinite);
 
@@ -32,7 +33,16 @@ export function validate(spec) {
       if (typeof item === 'string') { const [owner, port] = item.split('.'); if (!portOwners.has(owner) || !port) err(w, `포트 "${item}"의 부품을 찾을 수 없습니다`); }
       else if (Array.isArray(item)) { if (!isPoint(item)) err(w, '좌표는 [x, y, z] 숫자 3개여야 합니다'); }
       else if (item?.component) { if (!portOwners.has(item.component)) err(w, `부품 "${item.component}"를 찾을 수 없습니다`); }
-      else if (!item?.helix) err(w, '포트 문자열, [x,y,z], {component}, {helix} 중 하나여야 합니다');
+      else if (item?.port !== undefined) {
+        const [owner, port] = String(item.port).split('.');
+        if (!portOwners.has(owner) || !port) err(w, `포트 "${item.port}"의 부품을 찾을 수 없습니다`);
+        if (!isPoint(item.offset ?? [0, 0, 0])) err(w, 'offset은 [dx, dy, dz] 숫자 3개여야 합니다');
+      }
+      else if (item?.auto) {
+        if (j === 0 || j === r.path.length - 1) err(w, '자동 구간은 경로의 처음이나 끝에 올 수 없습니다 (앞뒤에 점이 필요합니다)');
+        if (r.path[j - 1]?.auto || r.path[j + 1]?.auto) err(w, '자동 구간 두 개가 연달아 올 수 없습니다');
+      }
+      else if (!item?.helix) err(w, '포트 문자열, [x,y,z], {port, offset}, {component}, {helix}, {auto} 중 하나여야 합니다');
     }
   }
   return errors;
@@ -64,30 +74,57 @@ export function build(spec) {
       return [p.clone()];
     }
     if (Array.isArray(item)) return [P(item)];
+    if (item.port !== undefined) return resolve(item.port, where).map(p => p.add(P(item.offset ?? [0, 0, 0])));
     if (item.component) { const path = comps[item.component].path; if (!path) throw new Error(`${where}: 부품 "${item.component}"에는 내부 유로가 없습니다`); return path.map(p => p.clone()); }
     return helixPoints(item.helix);
   };
-  const routes = [];
-  try {
-    for (const r of spec.circuit) {
-      const raw = r.path.flatMap((item, j) => resolve(item, `circuit(${r.id}).path[${j}]`));
-      const radius = r.bendRadius ?? r.path.map(i => i.component && comps[i.component].bendRadius).find(Boolean) ?? 15;
-      routes.push({...r, points: fillet(raw, radius)});
-    }
-  } catch (e) { return {errors: [e.message]}; }
+  const checks = spec.checks ?? {};
+  const touches = (r, id) => r.path.some(i => (typeof i === 'string' && i.split('.')[0] === id) || i?.component === id || (i?.port !== undefined && String(i.port).split('.')[0] === id));
+  // Pass 1: resolve everything except automatic sections.
+  let pending;
+  try { pending = spec.circuit.map(r => ({r, pieces: r.path.map((item, j) => item?.auto ? null : resolve(item, `circuit(${r.id}).path[${j}]`))})); }
+  catch (e) { return {errors: [e.message]}; }
+  // Pass 2: route automatic sections in circuit order around parts and every other pipe known so far.
+  const cabinet = comps.cabinet ?? Object.values(comps).find(c => c.bounds);
+  const grow = (b, m) => ({x: [b.x[0] - m, b.x[1] + m], y: [b.y[0] - m, b.y[1] + m], z: [b.z[0] - m, b.z[1] + m]});
+  const segmentBoxes = (pts, od) => pts.slice(1).map((p, i) => grow({x: [Math.min(pts[i].x, p.x), Math.max(pts[i].x, p.x)], y: [Math.min(pts[i].y, p.y), Math.max(pts[i].y, p.y)], z: [Math.min(pts[i].z, p.z), Math.max(pts[i].z, p.z)]}, od / 2));
+  const autoErrors = [];
+  for (const [ri, {r, pieces}] of pending.entries()) for (const [j, item] of r.path.entries()) {
+    if (!item?.auto) continue;
+    if (!cabinet?.bounds) { autoErrors.push(`circuit(${r.id}): 자동 구간에는 cabinet 부품(배관 허용 영역)이 필요합니다`); continue; }
+    const ignore = new Set(item.auto.ignore ?? []);
+    const margin = r.od / 2 + (checks.minClearanceMm ?? 1) + 1;
+    const obstacles = [];
+    for (const [id, c] of Object.entries(comps)) if (!touches(r, id) && !ignore.has(id)) for (const b of c.obstacles ?? c.solids ?? []) obstacles.push(grow(b, margin));
+    const mayTouch = new Set((checks.touching ?? []).filter(p => p.includes(r.id)).flat());
+    for (const [oi, o] of pending.entries()) if (oi !== ri && !mayTouch.has(o.r.id)) for (const piece of o.pieces) if (piece) for (const b of segmentBoxes(piece, o.r.od)) obstacles.push(grow(b, margin));
+    const from = pieces[j - 1].at(-1), to = pieces[j + 1][0];
+    const opts = {bounds: cabinet.bounds, soft: cabinet.soft ?? [], obstacles, grid: item.auto.grid, bendCost: item.auto.bendCost, softCost: item.auto.softCost};
+    // Open only the end cells first; widen the escape zone only if a port is boxed in.
+    let out = routePath(from, to, {...opts, escape: 0});
+    for (const escape of [1, 3]) if (out.error) out = routePath(from, to, {...opts, escape});
+    if (out.error) autoErrors.push(`circuit(${r.id}).path[${j}] 자동 구간: ${out.error}`);
+    else pieces[j] = out.points.slice(1, -1);
+  }
+  if (autoErrors.length) return {errors: autoErrors};
+  const routes = pending.map(({r, pieces}) => {
+    const radius = r.bendRadius ?? r.path.map(i => i.component && comps[i.component].bendRadius).find(Boolean) ?? 15;
+    return {...r, points: fillet(pieces.flat(), radius)};
+  });
   for (const r of routes) parts.push({id: `${r.id}_pipe`, group: r.group ?? r.id, name: r.name, color: r.color ?? 0xb5794a, basis: r.basis ?? 'typical', notes: r.notes ?? '', page: r.page,
     kind: 'pipe', geometry: sweep(r.points, Math.max(r.od / 2, .9), r.od > 3 ? 12 : 8)});
 
   // ---------- checks ----------
-  const fail = [], checks = spec.checks ?? {};
+  const fail = [];
   const same = (a, b) => a.distanceTo(b) < 1e-6;
+  const owner = i => typeof i === 'string' ? i.split('.')[0] : i?.port !== undefined ? String(i.port).split('.')[0] : null;
   const first = spec.circuit[0].path[0], last = spec.circuit.at(-1).path.at(-1);
-  if (typeof first !== 'string' || typeof last !== 'string' || first.split('.')[0] !== last.split('.')[0]) fail.push('회로는 같은 부품(압축기)의 포트에서 시작하고 끝나야 합니다');
+  if (!owner(first) || owner(first) !== owner(last)) fail.push('회로는 같은 부품(압축기)의 포트에서 시작하고 끝나야 합니다');
   for (let i = 0; i < routes.length - 1; i++) {
     const a = routes[i], b = routes[i + 1];
     if (same(a.points.at(-1), b.points[0])) continue;
     const endRef = a.path.at(-1), startRef = b.path[0];
-    const viaComponent = typeof endRef === 'string' && typeof startRef === 'string' && endRef.split('.')[0] === startRef.split('.')[0];
+    const viaComponent = owner(endRef) !== null && owner(endRef) === owner(startRef);
     if (!viaComponent) fail.push(`${a.id} → ${b.id} 끊김`);
   }
   const touching = new Set((checks.touching ?? []).map(p => p.join('|')));
@@ -107,7 +144,6 @@ export function build(spec) {
   }
   for (const [id, c] of Object.entries(comps)) if (c.inside) for (const r of routes) if (r.points.some(c.inside)) fail.push(`${r.id}가 ${id}를 관통`);
   // Pipes must not cross solid volumes of components they are not connected to.
-  const touches = (r, id) => r.path.some(i => (typeof i === 'string' && i.split('.')[0] === id) || i?.component === id);
   const inBox = (p, b) => ['x', 'y', 'z'].every((k, i) => p.getComponent(i) > b[k][0] + .5 && p.getComponent(i) < b[k][1] - .5);
   const samples = r => r.points.flatMap((p, i) => {
     if (!i) return [p];
@@ -135,7 +171,7 @@ export function build(spec) {
   const door = spec.components.find(c => c.id === 'door');
   const model = {units: 'mm', coordinateSystem: 'X right viewed from front; Y rear; Z up. THREE x=X/1000,y=Z/1000,z=-Y/1000.', doorPivotMm: door?.hinge ?? null, parts: meshes};
   const routesOut = {model: spec.meta.model, refrigerant: spec.meta.refrigerant, coordinateBasis: 'mm; front-view right +X, rear +Y, up +Z',
-    circuitOrder: routes.map(r => r.id), compressorPorts: Object.fromEntries(Object.entries(comps[first.split('.')[0]].ports).map(([k, p]) => [k, p.toArray()])),
+    circuitOrder: routes.map(r => r.id), compressorPorts: Object.fromEntries(Object.entries(comps[owner(first)].ports).map(([k, p]) => [k, p.toArray()])),
     routes: routes.map(r => ({id: r.id, name: r.name, outerDiameterMm: r.od, lengthMm: Math.round(length(r.points)), notes: r.notes, points: r.points.map(p => p.toArray().map(round))}))};
   const verification = {valid: fail.length === 0, specId: spec.id, partCount: meshes.length, triangles: meshes.reduce((s, m) => s + m.indices.length / 3, 0),
     overallWithHandleMm: {width: size[0], depth: size[1], height: size[2]}, circuitClosed: !fail.some(f => f.includes('끊김') || f.includes('시작하고')),

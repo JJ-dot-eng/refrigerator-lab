@@ -49,4 +49,27 @@ assert.match(build(bad).verification.failures.join('\n'), /pan_loop → condense
 bad = clone(); bad.expect.overallMm.width = 600;
 assert.match(build(bad).verification.failures.join('\n'), /전체 치수/);
 
-console.log(`Models: ${ids.length} specs build with closed circuits and no interference, outputs up to date, T-19-HC bottom-mount placement, 6 broken-spec cases rejected.`);
+// Automatic routing: runs replaced by {auto} sections still pass every check, pipes anchored
+// to ports follow a moved compressor, and impossible requests fail with a readable reason.
+const t19Spec = load('t-19-hc'), setPath = (spec, id, path) => { spec.circuit.find(r => r.id === id).path = path; };
+let auto = JSON.parse(JSON.stringify(t19Spec));
+auto.components[0].voids[0].keepOut = true;
+setPath(auto, 'suction', ['evaporator.out', [-255, 125, 1910], {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']);
+setPath(auto, 'discharge', ['compressor.discharge', {port: 'compressor.discharge', offset: [-20, 0, 0]}, {auto: {}}, {port: 'condenser.in', offset: [-20, 0, 0]}, 'condenser.in']);
+let res = build(auto);
+assert.deepEqual([res.errors, res.verification.failures], [[], []], 'auto-routed T-19-HC');
+const autoLen = res.verification.pipeLengthsMm.suction;
+auto.components.find(c => c.id === 'compressor').center = [80, 150];
+res = build(auto);
+assert.deepEqual([res.errors, res.verification.failures], [[], []], 'moved compressor: anchored + auto pipes follow');
+assert.notEqual(res.verification.pipeLengthsMm.suction, autoLen, 'suction re-routed');
+const hrAuto = clone();
+setPath(hrAuto, 'suction', ['evaporator.out', [-200, 55, 727], {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']);
+res = build(hrAuto);
+assert.deepEqual([res.errors, res.verification.failures], [[], []], 'auto-routed HR24B suction');
+bad = clone(); setPath(bad, 'suction', ['evaporator.out', {auto: {}}, [5000, 0, 0], 'compressor.suction']);
+assert.match(build(bad).errors.join('\n'), /배관 허용 영역 밖/);
+bad = clone(); setPath(bad, 'suction', [{auto: {}}, 'compressor.suction']);
+assert.match(validate(bad).join('\n'), /처음이나 끝에 올 수 없습니다/);
+
+console.log(`Models: ${ids.length} specs build with closed circuits and no interference, outputs up to date, T-19-HC bottom-mount placement, auto routing (T-19-HC, HR24B, moved compressor), 8 broken-spec cases rejected.`);

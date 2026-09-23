@@ -14,7 +14,8 @@ const main = (c, geometry, color, extra) => part(c, null, {id: c.id, name: c.nam
 export function cabinet(c) {
   let pieces = [c.body];
   for (const v of c.voids) pieces = pieces.flatMap(p => subtractBox(p, v));
-  return {parts: [main(c, pieces.map(boxOf), 0xbfcbd0)], ports: {}};
+  // Router: pipes stay inside the body; voids marked keepOut (food space) are crossed only when needed.
+  return {parts: [main(c, pieces.map(boxOf), 0xbfcbd0)], ports: {}, bounds: c.body, soft: c.voids.filter(v => v.keepOut)};
 }
 
 export function primitives(c) {
@@ -66,7 +67,9 @@ export function hermeticCompressor(c) {
   if (c.relay) parts.push(part(c, c.relay, {id: `${c.id}_relay`, name: '기동 릴레이', color: 0x3a4146},
     box(cx + c.relay.x[0], cx + c.relay.x[1], cy + c.relay.y[0], cy + c.relay.y[1], c.floorZ + c.relay.z[0], c.floorZ + c.relay.z[1])));
   const inside = p => { const h = p.z - shellBase; if (h < 0 || h > top) return false; const r = radiusAt(h); return ((p.x - cx) / r) ** 2 + ((p.y - cy) / (r * ell)) ** 2 < 1; };
-  return {parts, ports, inside, shellTop: shellBase + top};
+  const R = profile.reduce((m, [r]) => Math.max(m, r), 0);
+  return {parts, ports, inside, shellTop: shellBase + top,
+    obstacles: [{x: [cx - R, cx + R], y: [cy - R * ell, cy + R * ell], z: [c.floorZ, shellBase + top]}, ...(c.relay ? [{x: [cx + c.relay.x[0], cx + c.relay.x[1]], y: [cy + c.relay.y[0], cy + c.relay.y[1]], z: [c.floorZ + c.relay.z[0], c.floorZ + c.relay.z[1]]}] : [])]};
 }
 
 // ---------- condensate pan (optionally heated by a discharge loop routed in the circuit) ----------
@@ -74,7 +77,7 @@ export function condensatePan(c) {
   const {x: [x0, x1], y: [y0, y1], z: [z0, z1]} = c.box, t = c.wall ?? 2;
   const parts = [main(c, [box(x0, x1, y0, y1, z0, z0 + t), box(x0, x0 + t, y0, y1, z0, z1), box(x1 - t, x1, y0, y1, z0, z1), box(x0, x1, y0, y0 + t, z0, z1), box(x0, x1, y1 - t, y1, z0, z1)], 0x8a9396)];
   if (c.bracket) parts.push(part(c, c.bracket, {id: `${c.id}_bracket`, name: '팬 받침 브래킷', color: 0x5c6468, group: c.id}, boxOf(c.bracket)));
-  return {parts, ports: {}};
+  return {parts, ports: {}, obstacles: [c.box]};
 }
 
 // ---------- rear wire-on-tube condenser: vertical serpentine in the plane y = const ----------

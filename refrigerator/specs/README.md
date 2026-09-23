@@ -56,7 +56,7 @@ npm run generate -- hr24b   # 하나만
 
 각 구간: `id`, `name`, `od`(관 외경 mm), `color`, `bendRadius`(굽힘 반경), `notes`, `path`.
 
-`path`에는 네 가지를 섞어 씁니다.
+`path`에는 여섯 가지를 섞어 씁니다.
 
 | 형식 | 뜻 |
 |---|---|
@@ -64,6 +64,19 @@ npm run generate -- hr24b   # 하나만
 | `[x, y, z]` | 경유점. 모서리는 `bendRadius`로 둥글게 굽힘 |
 | `{"component": "condenser"}` | 그 부품의 내부 유로 (사행관) 전체 |
 | `{"helix": {center, radius, turns, pitch, startDeg, extraDeg}}` | 코일 (축은 Y 방향) |
+| `{"port": "compressor.suction", "offset": [dx, dy, dz]}` | 포트 기준 점. 부품을 옮기면 함께 움직입니다 |
+| `{"auto": {}}` | 앞뒤 점 사이를 자동으로 잇는 구간 (아래) |
+
+### 자동 경로 (`{"auto": {}}`)
+
+앞뒤 점 사이를 축 방향(ㄱ자) 배관으로 자동 연결합니다. 굽힘이 적고 짧은 경로를 찾으며, 다음을 피합니다.
+
+- 이 구간과 연결되지 않은 부품의 부피 (압축기, 팬 받침, 코일, 드라이어, 팬, 와이어 응축기)
+- 다른 배관 (단, `checks.touching`에 함께 적힌 배관은 붙어도 됨)
+- `cabinet` 외곽 상자 밖
+- `cabinet.voids` 중 `"keepOut": true`인 공간(예: 식품 칸)은 꼭 필요할 때만 지납니다
+
+선택 항목: `grid`(탐색 간격 mm, 기본 10; 큰 모델은 자동으로 넓어짐), `bendCost`(굽힘 벌점, 기본 2), `softCost`(회피 공간 벌점, 기본 8), `ignore`(무시할 부품 id 목록). 자동 구간은 경로의 처음·끝에 올 수 없고 두 개가 연달아 올 수 없습니다. 포트 바로 앞에 `{"port", "offset"}` 점을 두면 배관이 포트에 곧게 들어갑니다.
 
 규칙:
 
