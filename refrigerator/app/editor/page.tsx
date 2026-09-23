@@ -7,12 +7,12 @@ import ModelScene,{type SceneData} from '@/components/model-scene';
 import {build,toObj} from '@/generator/build.mjs';
 import {asset} from '@/lib/asset';
 import {Fields,type Change} from './fields';
+import {WIZARD_KEY,WIZARD_BASE,draftKey} from '@/lib/storage-keys';
 import '../hr24/style.css';
 import './editor.css';
 type Item={id:string;name:string;type?:string;notes?:string;[k:string]:unknown};
 type Spec={schema:string;id:string;meta:{model:string;[k:string]:unknown};components:Item[];circuit:Item[];[k:string]:unknown};
 type Result={errors:string[];model?:SceneData['model'];routes?:{routes:{id:string;name:string;outerDiameterMm:number;lengthMm:number;points:number[][]}[]};verification?:{failures:string[];overallWithHandleMm:{width:number;depth:number;height:number};partCount:number}};
-const draftKey=(id:string)=>`refrigerator-editor:${id}`;
 const readDraft=(id:string)=>{try{return localStorage.getItem(draftKey(id));}catch{return null;}};
 const writeDraft=(id:string,text:string|null)=>{try{if(text===null)localStorage.removeItem(draftKey(id));else localStorage.setItem(draftKey(id),text);}catch{/* storage unavailable: drafts are a convenience only */}};
 function setIn(obj:unknown,path:(string|number)[],value:unknown):unknown{
@@ -28,10 +28,15 @@ export default function EditorPage(){
  const [selected,setSelected]=useState('compressor'),[view,setView]=useState('rear'),[transparent,setTransparent]=useState(true),[flow,setFlow]=useState(false),[door,setDoor]=useState(false);
  const [rawDraft,setRawDraft]=useState<string|null>(null),[rawError,setRawError]=useState(''),[fileError,setFileError]=useState('');
  const fileInput=useRef<HTMLInputElement>(null);
- useEffect(()=>{fetch(asset('/models/index.json')).then(r=>r.json() as Promise<{models:{id:string;model:string}[]}>).then(d=>{setIndex(d.models);setBaseId(d.models[0]?.id??'');}).catch(()=>setIndex([]));},[]);
+ useEffect(()=>{fetch(asset('/models/index.json')).then(r=>r.json() as Promise<{models:{id:string;model:string}[]}>).then(d=>{
+  // A spec handed over from the /new wizard is offered as an extra base model.
+  let wizard:Spec|null=null;try{const w=localStorage.getItem(WIZARD_KEY);if(w)wizard=JSON.parse(w) as Spec;}catch{wizard=null;}
+  const list=wizard?[...d.models,{id:WIZARD_BASE,model:`${wizard.meta.model} (새로 만든 모델)`}]:d.models;setIndex(list);
+  const fromWizard=wizard&&new URLSearchParams(location.search).get('from')===WIZARD_BASE;setBaseId(fromWizard?WIZARD_BASE:d.models[0]?.id??'');}).catch(()=>setIndex([]));},[]);
  // Load the base spec (or the saved draft for it).
  useEffect(()=>{if(!baseId)return;let live=true;
-  fetch(asset(`/models/${baseId}/spec.json`)).then(r=>r.json() as Promise<Spec>).then(s=>{if(!live)return;
+  const source=baseId===WIZARD_BASE?Promise.resolve(JSON.parse(localStorage.getItem(WIZARD_KEY)??'null') as Spec):fetch(asset(`/models/${baseId}/spec.json`)).then(r=>r.json() as Promise<Spec>);
+  source.then(s=>{if(!live||!s)return;
    const draft=readDraft(baseId);let start=s,fromDraft=false;
    if(draft){try{const d=JSON.parse(draft) as Spec;if(JSON.stringify(d)!==JSON.stringify(s)){start=d;fromDraft=true;}}catch{writeDraft(baseId,null);}}
    setOriginal(s);setSpec(start);setSpecBase(baseId);setHistory([]);setRestored(fromDraft);setScene(null);setSelected('compressor');}).catch(()=>{if(live)setFileError('사양서를 불러오지 못했습니다.');});
@@ -58,7 +63,7 @@ export default function EditorPage(){
  const raw=rawDraft??(spec?JSON.stringify(spec,null,2):'');
  function applyRaw(){try{const s=JSON.parse(raw) as Spec;setHistory(h=>spec?[...h.slice(-49),spec]:h);setSpec(s);setRawDraft(null);setRawError('');}catch(e){setRawError(`JSON 형식 오류: ${(e as Error).message}`);}}
 
- return <main className="hr-app"><header><div><small>SPEC EDITOR</small><h1>사양서 <b>편집기</b></h1></div><nav><Link href="/models">모델 목록</Link><Link href="/">HR24B 도면 대조</Link></nav></header>
+ return <main className="hr-app"><header><div><small>SPEC EDITOR</small><h1>사양서 <b>편집기</b></h1></div><nav><Link href="/new">새로 만들기</Link><Link href="/models">모델 목록</Link><Link href="/">HR24B 도면 대조</Link></nav></header>
  <div className="hr-summary">값을 바꾸면 0.25초 뒤 브라우저에서 모델을 다시 생성하고 검사합니다<span>작업 내용은 이 브라우저에 자동 저장됩니다</span><b>{spec?.meta.model}</b></div>
  <div className="hr-work"><aside className="hr-parts"><h2>기준 모델</h2>
   <select className="ed-base" aria-label="기준 모델" value={baseId} onChange={e=>setBaseId(e.target.value)}>{index.map(m=><option key={m.id} value={m.id}>{m.model}</option>)}</select>

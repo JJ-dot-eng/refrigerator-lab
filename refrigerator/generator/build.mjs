@@ -95,7 +95,8 @@ export function build(spec) {
     const ignore = new Set(item.auto.ignore ?? []);
     const margin = r.od / 2 + (checks.minClearanceMm ?? 1) + 1;
     const obstacles = [];
-    for (const [id, c] of Object.entries(comps)) if (!touches(r, id) && !ignore.has(id)) for (const b of c.obstacles ?? c.solids ?? []) obstacles.push(grow(b, margin));
+    // Connected parts are obstacles too: their ports stick out past their volume, and the end cells stay open.
+    for (const [id, c] of Object.entries(comps)) if (!ignore.has(id)) for (const b of c.obstacles ?? c.solids ?? []) obstacles.push(grow(b, margin));
     const mayTouch = new Set((checks.touching ?? []).filter(p => p.includes(r.id)).flat());
     for (const [oi, o] of pending.entries()) if (oi !== ri && !mayTouch.has(o.r.id)) for (const piece of o.pieces) if (piece) for (const b of segmentBoxes(piece, o.r.od)) obstacles.push(grow(b, margin));
     const from = pieces[j - 1].at(-1), to = pieces[j + 1][0];
