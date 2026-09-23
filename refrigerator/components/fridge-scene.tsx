@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {asset} from '@/lib/asset';
 export default function FridgeScene({door,exploded,thermal,air,running,selected,onSelect}:{door:boolean;exploded:boolean;thermal:boolean;air:number;running:boolean;selected:string;onSelect:(id:string)=>void}){
  const host=useRef<HTMLDivElement>(null);const live=useRef({door,exploded,thermal,air,running,selected,onSelect});useEffect(()=>{live.current={door,exploded,thermal,air,running,selected,onSelect};},[door,exploded,thermal,air,running,selected,onSelect]);const [error,setError]=useState('');
  useEffect(()=>{const el=host.current;if(!el)return;let renderer:THREE.WebGLRenderer;try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});}catch{queueMicrotask(()=>setError('이 브라우저에서 WebGL을 사용할 수 없습니다. 다른 탭의 계산·제어 기능은 사용할 수 있습니다.'));return;}
@@ -32,7 +33,7 @@ export default function FridgeScene({door,exploded,thermal,air,running,selected,
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let down=[0,0];const pointerDown=(e:PointerEvent)=>{down=[e.clientX,e.clientY]};const pick=(e:PointerEvent)=>{if(Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const r=el.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mouse,camera);const hit=ray.intersectObjects(parts).find(h=>h.object.visible);if(hit)live.current.onSelect(hit.object.userData.id);};renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pick);
  const resize=new ResizeObserver(()=>{camera.aspect=el.clientWidth/el.clientHeight;camera.updateProjectionMatrix();renderer.setSize(el.clientWidth,el.clientHeight);});resize.observe(el);
  let disposed=false;
-fetch('/design/cad-meshes.json').then(r=>{if(!r.ok)throw Error();return r.json() as Promise<{parts:{id:string;positions:number[];indices:number[]}[]}>}).then(data=>{
+fetch(asset('/design/cad-meshes.json')).then(r=>{if(!r.ok)throw Error();return r.json() as Promise<{parts:{id:string;positions:number[];indices:number[]}[]}>}).then(data=>{
  if(disposed)return;
  for(const o of parts)if(!['sensor','harness'].includes(o.userData.id))o.visible=false;
  const idMap:Record<string,string>={door_liner:'door',machine_compartment:'cabinet',shelf_1:'shelves',shelf_2:'shelves',shelf_3:'shelves',main_pcb:'main'};

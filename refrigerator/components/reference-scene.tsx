@@ -4,6 +4,7 @@ import * as T from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {stateAt,fluidColor} from '@/lib/circuit';
 import type {DetailedPoint,Pipe,Piping} from '@/lib/circuit';
+import {asset} from '@/lib/asset';
 type Props={door:boolean;exploded:boolean;section:boolean;selected:string;view:string;onSelect:(id:string)=>void;circuit?:boolean;point?:DetailedPoint;flow?:boolean};
 export default function ReferenceScene(props:Props){
  const host=useRef<HTMLDivElement>(null),live=useRef(props);useEffect(()=>{live.current=props;},[props]);const [error,setError]=useState('');
@@ -19,7 +20,7 @@ export default function ReferenceScene(props:Props){
   const pipes:{mesh:T.Mesh;curve:T.CurvePath<T.Vector3>;pipe:Pipe;markers:T.Mesh[];segments:number}[]=[];
   const grid=new T.GridHelper(5,25,0x596970,0x26383f);scene.add(grid);
   let alive=true;
-  if(live.current.circuit)fetch('/reference/piping-layout.json').then(r=>{if(!r.ok)throw Error('배관 데이터를 읽지 못했습니다.');return r.json() as Promise<Piping>;}).then(layout=>{
+  if(live.current.circuit)fetch(asset('/reference/piping-layout.json')).then(r=>{if(!r.ok)throw Error('배관 데이터를 읽지 못했습니다.');return r.json() as Promise<Piping>;}).then(layout=>{
    if(!alive)return;
    for(const pipe of layout.routes){
     const curve=new T.CurvePath<T.Vector3>();const pts=pipe.pointsMm.map(v=>new T.Vector3(v[0]/1000,v[2]/1000,-v[1]/1000));
@@ -32,7 +33,7 @@ export default function ReferenceScene(props:Props){
     pipes.push({mesh,curve,pipe,markers,segments});
    }
   }).catch(e=>{if(alive)setError(e.message);});
-  fetch('/reference/cad-meshes.json').then(r=>{if(!r.ok)throw Error('CAD 파일을 불러오지 못했습니다.');return r.json() as Promise<{parts:{id:string;group:string;positions:number[];indices:number[]}[]}>;}).then(data=>{
+  fetch(asset('/reference/cad-meshes.json')).then(r=>{if(!r.ok)throw Error('CAD 파일을 불러오지 못했습니다.');return r.json() as Promise<{parts:{id:string;group:string;positions:number[];indices:number[]}[]}>;}).then(data=>{
    if(!alive)return;
    for(const p of data.parts){
     const id=p.group||p.id;const isDoor=id==='door'||id==='handle';const pos:number[]=[];

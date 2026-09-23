@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import * as T from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {asset} from '@/lib/asset';
 type Part={id:string;group?:string;kind?:string;spin?:{centerMm:number[];axisMm:number[]};color:number;positions:number[];indices:number[]};
 type Route={id:string;points:number[][]};
 type Props={selected:string;onSelect:(id:string)=>void;view:string;transparent:boolean;flow:boolean;door:boolean};
@@ -16,7 +17,7 @@ export default function HR24Scene(p:Props){
  const hinge=new T.Group();hinge.position.set(.2975,0,.312);scene.add(hinge);
  let alive=true;
  const cadTo3=(a:number[])=>new T.Vector3(a[0]/1000,a[2]/1000,-a[1]/1000);
- Promise.all([fetch('/hr24/model.json').then(r=>{if(!r.ok)throw Error();return r.json() as Promise<{parts:Part[]}>;}),fetch('/hr24/routes.json').then(r=>{if(!r.ok)throw Error();return r.json() as Promise<{routes:Route[]}>;})]).then(([model,pipes])=>{if(!alive)return;
+ Promise.all([fetch(asset('/hr24/model.json')).then(r=>{if(!r.ok)throw Error();return r.json() as Promise<{parts:Part[]}>;}),fetch(asset('/hr24/routes.json')).then(r=>{if(!r.ok)throw Error();return r.json() as Promise<{routes:Route[]}>;})]).then(([model,pipes])=>{if(!alive)return;
  for(const part of model.parts){const id=part.group||part.id,isDoor=id==='door';const pivot=part.spin?cadTo3(part.spin.centerMm):null;const positions:number[]=[];for(let i=0;i<part.positions.length;i+=3){const v=cadTo3(part.positions.slice(i,i+3));if(isDoor)v.sub(hinge.position);if(pivot)v.sub(pivot);positions.push(v.x,v.y,v.z);}
  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(part.indices);geo.computeVertexNormals();
  const pipe=part.kind==='pipe',mesh=new T.Mesh(geo,new T.MeshStandardMaterial({color:part.color,metalness:pipe?.6:.35,roughness:pipe?.35:.5,side:T.DoubleSide}));mesh.userData.id=id;items.push(mesh);if(pivot&&part.spin){const g=new T.Group();g.position.copy(pivot);g.add(mesh);scene.add(g);const a=part.spin.axisMm;spinners.push({pivot:g,axis:new T.Vector3(a[0],a[2],-a[1]).normalize()});}else (isDoor?hinge:scene).add(mesh);}

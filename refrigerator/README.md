@@ -43,6 +43,10 @@ HR24B는 R600a(충전량 2.80oz, 38쪽) 모델이다. 부품 위치와 냉매 �
 상위 폴더의 `Start-MONO120.cmd`를 실행하고 http://localhost:3000 을 연다.
 또는 이 폴더에서 `npm install`, `npm run dev -- --host 127.0.0.1`을 실행한다.
 
+## GitHub Pages
+
+`main`에 push하면 `.github/workflows/pages.yml`이 테스트 후 정적 사이트를 빌드해 배포한다. 저장소 Settings → Pages → Source를 "GitHub Actions"로 둔다. 로컬에서 같은 결과를 만들려면 `PAGES_BASE_PATH=/refrigerator-lab npm run build` 후 `dist/client`를 정적 서버로 열고 `/refrigerator-lab/`로 접속한다. 공개 파일 경로는 `lib/asset.ts`의 `asset()`으로 감싸야 Pages 하위 경로에서도 열린다.
+
 ## 구성
 
 - `app/page.tsx`: 실험 화면, 가상 입력, EEPROM 브라우저 저장, 기록 출력
