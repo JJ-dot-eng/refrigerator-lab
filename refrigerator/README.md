@@ -2,7 +2,7 @@
 
 모델별 근거, 가정, 한계와 데이터 재생성 방법을 정리한다. 전체 소개와 실행 방법은 [저장소 README](../README.md)를 본다.
 
-- [사양서 기반 생성기 (`/models`)](#사양서-기반-생성기-models)
+- [사양서 기반 생성기 (`/models`, `/editor`)](#사양서-기반-생성기-models-editor)
 - [HR24B (`/`)](#hoshizaki-hr24b-)
 - [True T-19-HC (`/reference`)](#true-t-19-hc-reference)
 - [MONO 120 (`/lab`)](#mono-120-lab)
@@ -10,7 +10,7 @@
 - [배포](#github-pages)
 - [검증](#검증)
 
-## 사양서 기반 생성기 (`/models`)
+## 사양서 기반 생성기 (`/models`, `/editor`)
 
 냉장고 한 대를 사양서 JSON 하나로 기술하고, `generator/`가 외함·부품·냉매 배관을 만들어 자동 검사한다(회로 연결, 배관 간격, 부품 관통, 전체 치수). 양식과 부품 종류는 [specs/README.md](specs/README.md)에 있다.
 
@@ -24,6 +24,8 @@ npm run generate
 | T-19-HC | `specs/t-19-hc.json` | 리치인, 하부 응축 유닛(핀-튜브 응축기와 팬), 천장 증발기 |
 
 T-19-HC 사양서는 외형 치수(사양서 2쪽), 하부 응축 유닛, R290만 제조사 자료이고 내부 배치는 업계 일반값이다. `/reference` 화면의 T-19-HC 모델(FreeCAD 재구성)과는 별개다.
+
+`/editor`(사양서 편집기)는 같은 생성기를 브라우저에서 실행한다. 부품이나 배관을 고르면 사양서 항목이 입력칸으로 나오고, 값을 바꾸면 0.25초 뒤 3D와 검사 결과가 갱신된다(생성 약 0.1초). 검사에 걸린 부품·배관은 목록에 빨간 점으로 표시한다. 되돌리기, 배관 경유점 추가·삭제, JSON 직접 편집, 사양서 JSON 열기·저장, OBJ 저장을 지원한다. 작업 중인 사양서는 기준 모델별로 브라우저 localStorage에 자동 저장되며 서버로 보내지 않는다. 부품 추가·삭제는 JSON 직접 편집으로 한다.
 
 `/models` 화면은 `public/models/index.json`에 있는 모델을 모두 보여 준다. 3D 화면(`components/model-scene.tsx`)은 모델 크기에 맞춰 카메라를 자동으로 맞춘다.
 

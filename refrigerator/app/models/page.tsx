@@ -21,7 +21,7 @@ export default function ModelsPage(){
  const groups=data?data.spec.components.filter(c=>!c.group):[];
  const current=data&&([...data.spec.components,...data.spec.circuit].find(c=>c.id===selected));
  const base=asset(`/models/${id}`),v=data?.ver;
- return <main className="hr-app"><header><div><small>SPEC-GENERATED MODELS</small><h1>사양서 기반 <b>모델</b></h1></div><nav><Link href="/">HR24B 도면 대조</Link><Link href="/reference">T-19-HC 시뮬레이터</Link></nav></header>
+ return <main className="hr-app"><header><div><small>SPEC-GENERATED MODELS</small><h1>사양서 기반 <b>모델</b></h1></div><nav><Link href="/editor">사양서 편집기</Link><Link href="/">HR24B 도면 대조</Link><Link href="/reference">T-19-HC 시뮬레이터</Link></nav></header>
  <div className="hr-summary">사양서(JSON) 하나로 외함·부품·냉매 배관을 생성하고 자동 검사합니다<span>{index.length}개 모델</span><b>{data?.spec.meta.model}</b></div>
  <div className="hr-work"><aside className="hr-parts"><h2>모델</h2>{index.map(m=><button key={m.id} className={id===m.id?'active':''} onClick={()=>{setData(null);setId(m.id);setSelected('compressor');}}><span>{m.refrigerant}</span>{m.model}</button>)}
  <h2 style={{marginTop:24}}>부품</h2>{groups.map(g=><button key={g.id} className={selected===g.id?'active':''} onClick={()=>setSelected(g.id)}>{g.name}</button>)}
@@ -37,5 +37,5 @@ export default function ModelsPage(){
  <h2 style={{marginTop:20}}>냉매 회로</h2><ol className="hr-circuit">{data.routes.routes.map(r=><li key={r.id}><button className={selected===r.id?'active':''} onClick={()=>setSelected(r.id)}>{r.name}</button><span>Ø{r.outerDiameterMm} · {(r.lengthMm/1000).toFixed(2)} m</span></li>)}</ol>
  <p><a href={`${base}/spec.json`} download>사양서(JSON) 받기</a> · <a href={`${base}/model.obj`} download>3D 모델(OBJ) 받기</a></p>
  {data.spec.meta.source&&<p><a href={data.spec.meta.source} target="_blank" rel="noreferrer">근거 자료 원본 ↗</a></p>}</>}</section></div>
- <footer><strong>새 모델 추가</strong><p>specs 폴더에 사양서 JSON을 추가하고 <code>node generator/generate.mjs</code>를 실행하면 이 목록에 나타납니다. 양식은 specs/README.md에 있습니다.</p></footer></main>;
+ <footer><strong>새 모델 추가</strong><p><Link href="/editor">사양서 편집기</Link>에서 기존 모델을 바탕으로 값을 고쳐 JSON으로 저장할 수 있습니다. 저장소에 반영하려면 specs 폴더에 그 JSON을 넣고 <code>node generator/generate.mjs</code>를 실행하면 이 목록에 나타납니다. 양식은 specs/README.md에 있습니다.</p></footer></main>;
 }

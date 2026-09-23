@@ -1,0 +1,36 @@
+.ed-base{width:100%;margin-bottom:6px}
+.ed-note{font-size:12px;color:#c9b58a;margin:8px 2px}
+.ed-link{background:none!important;border:0!important;padding:0!important;color:#8edbc9!important;text-decoration:underline;font-size:12px!important}
+.ed-bad{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff8a6b;margin-right:7px;vertical-align:middle}
+.ed-editor{padding:18px 20px 26px;border-top:1px solid #314752}
+.ed-editor h2{font-size:16px;margin-bottom:6px}
+.ed-editor h2 small{font-size:11px;color:#8ba8b5;font-weight:400;margin-left:6px}
+.ed-desc{font-size:12px;color:#a4bac6;margin-bottom:12px}
+.ed-help{font-size:11px;color:#8ba8b5;margin-top:12px}
+.ed-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 18px;align-items:start}
+.ed-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#b9cfd7;min-height:30px}
+.ed-row>span{white-space:nowrap}
+.ed-wide{grid-column:1/-1}
+.ed-wide input{flex:1;min-width:0}
+.ed-nums{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.hr-app .ed-num,.hr-app .ed-row input[type=text]{width:72px;padding:5px 7px;background:#132631;border:1px solid #37515d;border-radius:4px;color:#dce9ec;font:12px/1.2 ui-monospace,Consolas,monospace;text-align:right}
+.hr-app .ed-wide input[type=text]{width:auto;text-align:left;font-family:inherit}
+.hr-app .ed-num:focus,.hr-app .ed-row input:focus{outline:2px solid #78d6c2;outline-offset:0;border-color:#78d6c2}
+.ed-group{grid-column:1/-1;border:1px solid #2c4550;border-radius:6px;padding:8px 12px 10px;margin:4px 0}
+.ed-group legend{font-size:12px;color:#8edbc9;padding:0 6px}
+.ed-item{display:flex;gap:8px;align-items:flex-start;border-bottom:1px dashed #253c47;padding:4px 0}
+.ed-item:last-child{border-bottom:0}
+.ed-item>:first-child{flex:1;min-width:0}
+.ed-item-actions{display:flex;gap:4px;padding-top:3px}
+.ed-item-actions button{padding:2px 8px!important;font-size:12px!important}
+.ed-sub{font-size:11px;color:#8ba8b5}
+.ed-side p{font-size:12px}
+.ed-ok{color:#8be5ce!important}
+.ed-fail{color:#ffb39e!important}
+.ed-problems{margin:6px 0 12px 18px;font-size:12px;color:#ffcbb9;display:grid;gap:4px}
+.ed-files{display:flex;flex-wrap:wrap;gap:6px}
+.ed-files button{font-size:12px}
+.ed-raw{margin-top:18px;font-size:12px}
+.ed-raw summary{cursor:pointer;color:#8edbc9}
+.ed-raw textarea{width:100%;height:320px;margin:8px 0;background:#0d1a21;color:#cfe0e6;border:1px solid #37515d;border-radius:5px;font:11px/1.45 ui-monospace,Consolas,monospace;padding:8px}
+.hr-app button:disabled{opacity:.45;cursor:default}
