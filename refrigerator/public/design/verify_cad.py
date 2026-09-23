@@ -2,7 +2,7 @@ import FreeCAD as App
 import Part
 import json
 from pathlib import Path
-p=Path('C:/Users/JJ/Documents/CODEX/Product/work/engineering-assets')
+p=Path(__file__).resolve().parent  # one-door-120l.step sits next to this script
 s=Part.Shape()
 s.read(str(p/'one-door-120l.step'))
 b=s.BoundBox
