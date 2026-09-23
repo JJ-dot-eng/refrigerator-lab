@@ -53,7 +53,7 @@ npm run generate -- hr24b   # 하나만
 
 압축기는 `"model": "secop-nle15kk4"`처럼 카탈로그(`generator/catalog.mjs`) 모델을 지정하면 쉘 크기, 받침 구멍 간격, 연결관 굵기와 높이를 데이터시트 값으로 채웁니다. `shell`·`base`·`stubs`를 직접 적으면 그 값이 우선합니다.
 
-`cad-part`의 파일은 명령줄 생성(`npm run generate`)에서는 `specs/cad/` 폴더에서, 편집기에서는 "CAD 불러오기"로 연 파일(브라우저에 보관)에서 읽습니다. 배관이 없는 CAD 전용 모델은 `"circuit": []`로 둡니다.
+`cad-part`의 포트는 편집기에서 “3D에서 포트 찍기”로 부품 표면을 클릭해 정할 수 있습니다. 클릭한 점에서 표면 바깥쪽으로 지정한 거리(기본 15mm)만큼 띄운 뒤 CAD 원본 좌표로 바꿔 저장합니다. `cad-part`의 파일은 명령줄 생성(`npm run generate`)에서는 `specs/cad/` 폴더에서, 편집기에서는 "CAD 불러오기"로 연 파일(브라우저에 보관)에서 읽습니다. 배관이 없는 CAD 전용 모델은 `"circuit": []`로 둡니다.
 
 새 부품 종류는 `generator/builders.mjs`에 함수를 추가하고 `BUILDERS`에 등록합니다.
 

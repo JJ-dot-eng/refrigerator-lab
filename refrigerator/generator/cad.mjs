@@ -46,3 +46,7 @@ export function cadMatrix(c) {
   const t = c.transform ?? {}, r = (t.rotateDeg ?? [0, 0, 0]).map(v => v * Math.PI / 180), s = t.scale ?? 1;
   return new T.Matrix4().compose(new T.Vector3(...(t.translate ?? [0, 0, 0])), new T.Quaternion().setFromEuler(new T.Euler(r[0], r[1], r[2], 'XYZ')), new T.Vector3(s, s, s));
 }
+
+// Model mm <-> the CAD file's own coordinates for a placed cad-part (used for picked ports).
+export const cadToModel = (c, local) => new T.Vector3(...local).applyMatrix4(cadMatrix(c)).toArray();
+export const modelToCad = (c, mm) => new T.Vector3(...mm).applyMatrix4(cadMatrix(c).invert()).toArray().map(v => Math.round(v * 10) / 10);

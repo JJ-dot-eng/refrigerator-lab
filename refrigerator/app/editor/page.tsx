@@ -10,7 +10,7 @@ import {Fields,type Change} from './fields';
 import DrawingView from './drawing';
 import {translateComponent,MOVABLE_TYPES} from '@/generator/transform.mjs';
 import {COMPRESSORS,resolveCompressor} from '@/generator/catalog.mjs';
-import {CAD_EXTENSIONS} from '@/generator/cad.mjs';
+import {CAD_EXTENSIONS,cadToModel,modelToCad} from '@/generator/cad.mjs';
 import {parseCadFile,saveCadBytes,loadCadBytes,type CadFile} from '@/lib/cad-browser';
 import {WIZARD_KEY,WIZARD_BASE,draftKey} from '@/lib/storage-keys';
 import '../hr24/style.css';
@@ -36,6 +36,8 @@ export default function EditorPage(){
  const [rawDraft,setRawDraft]=useState<string|null>(null),[rawError,setRawError]=useState(''),[fileError,setFileError]=useState('');
  const fileInput=useRef<HTMLInputElement>(null),cadInput=useRef<HTMLInputElement>(null);
  const [cadFiles,setCadFiles]=useState<Record<string,CadFile>>({}),[cadBusy,setCadBusy]=useState('');
+ // Port picking on a CAD part: name to write, and how far the port sits off the clicked surface.
+ const [pick,setPick]=useState<{index:number;id:string;name:string;lift:number}|null>(null),[portName,setPortName]=useState(''),[portLift,setPortLift]=useState(15);
  useEffect(()=>{fetch(asset('/models/index.json')).then(r=>r.json() as Promise<{models:{id:string;model:string}[]}>).then(d=>{
   // A spec handed over from the /new wizard is offered as an extra base model.
   let wizard:Spec|null=null;try{const w=localStorage.getItem(WIZARD_KEY);if(w)wizard=JSON.parse(w) as Spec;}catch{wizard=null;}
@@ -88,6 +90,11 @@ export default function EditorPage(){
     transform:{translate:[r(-(lo[0]+hi[0])/2),r(-(lo[1]+hi[1])/2),r(-lo[2])],rotateDeg:[0,0,0],scale:1},ports:{}};
    setHistory(h=>[...h.slice(-49),spec]);setSpec({...spec,components:[...spec.components,part]});setSelected(part.id);}
   catch(e){setFileError(`CAD 불러오기 실패: ${(e as Error).message}`);}finally{setCadBusy('');}}
+ // Clicked point (model mm) + outward normal -> port in the CAD file's own coordinates.
+ function placePort(mm:[number,number,number],normal:[number,number,number]){if(!spec||!pick)return;const c=spec.components[pick.index];if(!c||c.id!==pick.id)return;
+  const len=Math.hypot(...normal)||1,local=modelToCad(c,mm.map((v,i)=>v+normal[i]/len*pick.lift));
+  change(['components',pick.index,'ports'],{...((c.ports??{}) as Record<string,number[]>),[pick.name]:local});setPick(null);}
+ const markers=current?.type==='cad-part'?Object.entries((current.ports??{}) as Record<string,number[]>).map(([k,q])=>({label:k,mm:cadToModel(current,q)})):[];
  function removeComponent(i:number){if(!spec)return;setHistory(h=>[...h.slice(-49),spec]);setSpec({...spec,components:spec.components.filter((_,j)=>j!==i)});setSelected('');}
  const raw=rawDraft??(spec?JSON.stringify(spec,null,2):'');
  function applyRaw(){try{const s=JSON.parse(raw) as Spec;setHistory(h=>spec?[...h.slice(-49),spec]:h);setSpec(s);setRawDraft(null);setRawError('');}catch(e){setRawError(`JSON 형식 오류: ${(e as Error).message}`);}}
@@ -102,7 +109,8 @@ export default function EditorPage(){
  </aside>
  <section className="hr-model"><div className="hr-tools"><select aria-label="시점" value={view} onChange={e=>setView(e.target.value)}><option value="rear">후면 입체</option><option value="back">후면 정면</option><option value="front">전면 입체</option><option value="left">좌측면</option><option value="machine">기계실 확대</option></select><button className={transparent?'active':''} onClick={()=>setTransparent(!transparent)}>외함 투명</button><button onClick={()=>setDoor(!door)}>문 {door?'닫기':'열기'}</button><button onClick={()=>setFlow(!flow)} className={flow?'active':''}>운전 표시</button><button onClick={undo} disabled={!history.length}>되돌리기</button></div>
   <div className="hr-tools ed-pane"><button className={pane==='3d'?'active':''} onClick={()=>setPane('3d')}>3D</button><button className={pane==='2d'?'active':''} onClick={()=>setPane('2d')}>도면 맞춤 (2D)</button></div>
-  {pane==='3d'?<ModelScene data={scene} fitKey={baseId} selected={selected} onSelect={id=>{if(spec&&[...spec.components,...spec.circuit].some(c=>c.id===id))setSelected(id);}} view={view} transparent={transparent} flow={flow} door={door}/>
+  {pick&&<p className="ed-note ed-pickbar">“{pick.name}” 포트: 3D 화면에서 {names[pick.id]} 표면을 클릭하세요. <button className="ed-link" onClick={()=>setPick(null)}>취소</button></p>}
+  {pane==='3d'?<ModelScene data={scene} fitKey={baseId} selected={selected} onSelect={id=>{if(spec&&[...spec.components,...spec.circuit].some(c=>c.id===id))setSelected(id);}} view={view} transparent={transparent} flow={flow} door={door} pickTarget={pick?.id??null} onPick={placePort} markers={markers}/>
   :<DrawingView model={scene?.model??null} routes={scene?.routes??null} movable={movable} names={names} bad={bad} selected={selected} onSelect={id=>{if(spec&&[...spec.components,...spec.circuit].some(c=>c.id===id))setSelected(id);}} onMove={moveComponent}/>}
   <div className="ed-editor">{current?<><h2>{current.name} <small>{String(current.type??'냉매 배관')} · {current.id}</small></h2>
    {typeof current.notes==='string'&&<p className="ed-desc">{current.notes}</p>}
@@ -114,9 +122,12 @@ export default function EditorPage(){
    {current.type==='cad-part'&&!cadFiles[String(current.file)]&&<p className="ed-fail">CAD 파일 “{String(current.file)}”이 이 브라우저에 없습니다. 같은 이름의 파일을 “CAD 불러오기”로 다시 여세요.</p>}
    <Fields value={current} path={currentPath} onChange={change} pathList={circuitIndex>=0}/>
    {listIndex>=0&&<div className="ed-files" style={{marginTop:10}}>
-    {current.type==='cad-part'&&<button onClick={()=>{const ports=(current.ports??{}) as Record<string,number[]>;let n=1;while(ports[`p${n}`])n++;change([...currentPath,'ports'],{...ports,[`p${n}`]:[0,0,0]});}}>포트 추가</button>}
+    {current.type==='cad-part'&&<span className="ed-portpick"><input aria-label="포트 이름" placeholder={`p${Object.keys((current.ports??{}) as object).length+1}`} value={portName} onChange={e=>setPortName(e.target.value.replace(/[^A-Za-z0-9_]/g,''))}/>
+     <label>표면에서 <input type="number" aria-label="표면에서 띄울 거리" value={portLift} onChange={e=>setPortLift(Number(e.target.value)||0)}/> mm</label>
+     <button className={pick?'active':''} disabled={!cadFiles[String(current.file)]} onClick={()=>{const ports=(current.ports??{}) as object;let n=Object.keys(ports).length+1;while(`p${n}` in ports)n++;
+      setPane('3d');setPick({index:listIndex,id:current.id,name:portName||`p${n}`,lift:portLift});setPortName('');}}>3D에서 포트 찍기</button></span>}
     <button onClick={()=>removeComponent(listIndex)}>이 부품 삭제</button></div>}
-   {current.type==='cad-part'&&<p className="ed-help">포트는 CAD 원본 좌표(mm)로 적습니다. 배관 경로에서 “{current.id}.포트이름”으로 연결합니다. 회전은 X→Y→Z 순서(도)입니다.</p>}
+   {current.type==='cad-part'&&<p className="ed-help">포트는 “3D에서 포트 찍기”로 부품 표면을 클릭해 정하거나(같은 이름이면 덮어씀) CAD 원본 좌표(mm)로 직접 적습니다. 노란 점이 현재 포트입니다. 배관 경로에서 “{current.id}.포트이름”으로 연결합니다. 회전은 X→Y→Z 순서(도)입니다.</p>}
    <p className="ed-help">단위 mm. 좌표는 정면 기준 X 오른쪽, Y 뒤쪽, Z 위. 숫자 칸에서 ↑↓는 1mm, Shift+↑↓는 10mm씩 바꿉니다.{circuitIndex>=0&&' 경로의 ＋는 경유점, ⤳는 자동 경로 구간(부품과 다른 배관을 피해 경로를 찾음)을 추가하고 ✕는 삭제합니다. 포트 기준 점(port + offset)은 부품을 옮기면 함께 움직입니다.'}</p></>
    :<p className="ed-desc">왼쪽 목록이나 3D 화면에서 부품을 고르세요.</p>}</div>
  </section>

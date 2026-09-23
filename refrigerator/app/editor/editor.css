@@ -55,3 +55,8 @@
 .dw-bad{stroke:#ff8a6b!important}
 .dw-pipe{fill:none;stroke:#d08a5a;stroke-opacity:.8;stroke-linejoin:round;cursor:pointer}
 .dw-pt{fill:#ffd36b}
+.ed-pickbar{margin:0 16px 8px;padding:8px 12px;border:1px solid #6b5a2c;border-radius:5px;background:#2a2518}
+.ed-portpick{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:#b9cfd7}
+.ed-portpick input{width:70px;padding:5px 7px;background:#132631;border:1px solid #37515d;border-radius:4px;color:#dce9ec}
+.ed-portpick label{display:inline-flex;gap:4px;align-items:center}
+.ed-portpick label input{width:52px}

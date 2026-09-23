@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import {build} from '../generator/build.mjs';
-import {parseCad} from '../generator/cad.mjs';
+import {parseCad, cadToModel, modelToCad} from '../generator/cad.mjs';
 import {translateComponent} from '../generator/transform.mjs';
 
 const require = createRequire(import.meta.url);
@@ -41,4 +41,16 @@ assert.deepEqual(out.routes.routes[0].points[0], [-250, 50, 120], 'port follows 
 const moved = {...piped, components: piped.components.map(c => c.id === 'b' ? translateComponent(c, [0, 50, 100]) : c)};
 out = build(moved, {cad: {'cube.stl': cube}});
 assert.deepEqual([out.errors, out.verification.failures], [[], []], 'moved CAD block re-routed');
-console.log(`CAD: STEP (${step.meshes.length} meshes, ${step.triangles} triangles) placed and rotated, STL blocks piped by port with auto routing, missing file reported.`);
+// Picked ports: a model-space point converted to the file's coordinates comes back to the same
+// model point after placement, including rotation and scale.
+{
+  const placed = {id: 'x', type: 'cad-part', name: 'x', file: 'cube.stl', transform: {translate: [120, -40, 30], rotateDeg: [15, -30, 60], scale: 2}};
+  const picked = [155.5, -12.25, 180];
+  const local = modelToCad(placed, picked);
+  cadToModel(placed, local).forEach((v, i) => assert.ok(Math.abs(v - picked[i]) < .5, `round trip ${i}`));
+  const withPort = {...placed, ports: {p1: local}};
+  const built = build({schema: 'refrigerator-spec/1', id: 'pick', meta: {model: 'pick'}, circuit: [], components: [withPort]}, {cad: {'cube.stl': cube}});
+  assert.deepEqual(built.errors, []);
+}
+
+console.log(`CAD: STEP (${step.meshes.length} meshes, ${step.triangles} triangles) placed and rotated, STL blocks piped by port with auto routing, picked-port coordinate round trip, missing file reported.`);

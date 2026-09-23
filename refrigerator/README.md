@@ -29,7 +29,7 @@ T-19-HC 사양서는 외형 치수(사양서 2쪽), 하부 응축 유닛, R290�
 
 부품 카탈로그(`generator/catalog.mjs`)에는 압축기 12종이 있다. 일반형 2종(HR24B·T-19-HC 재구성에 쓴 값)과 제조사 데이터시트에서 확인한 10종(Secop NLE15KK.4·NLU10KK.1·NLE10CN·SC12CNX.2·NL7F, Embraco EMX70CLC·NEK6152U·NEK6181U·NEU2155U·NEK6210Z)이다. 항목마다 데이터시트 URL과 쪽을 적었다. 데이터시트의 연결관 치수는 안지름이므로 모델의 연결관 바깥지름은 안지름+1.2mm로 그렸고, Embraco 시트에 없는 연결관 높이는 일반값을 쓴다. 전체 길이에 전기 커버가 포함된 모델은 쉘 길이를 따로 적었다. 마법사와 편집기에서 냉매에 맞는 모델을 고를 수 있고, 형태 템플릿은 압축기 높이에 맞춰 기계실 높이를 늘린다.
 
-CAD 가져오기(`generator/cad.mjs`)는 STEP·IGES를 occt-import-js(OpenCascade WebAssembly, LGPL-2.1)로, STL·OBJ를 three.js 로더로 읽어 `cad-part` 부품을 만든다. 위치·회전·배율과 배관 연결점(포트)을 지정할 수 있고, 자동 배관은 CAD 부품의 외곽 상자를 피한다. 편집기에서는 파일을 브라우저의 IndexedDB에만 보관한다. `tests/cad.mjs`가 STEP 읽기·회전 배치, STL 블록 사이 자동 배관, 파일 누락 오류를 검사한다.
+CAD 가져오기(`generator/cad.mjs`)는 STEP·IGES를 occt-import-js(OpenCascade WebAssembly, LGPL-2.1)로, STL·OBJ를 three.js 로더로 읽어 `cad-part` 부품을 만든다. 위치·회전·배율과 배관 연결점(포트)을 지정할 수 있고, 자동 배관은 CAD 부품의 외곽 상자를 피한다. 편집기에서는 파일을 브라우저의 IndexedDB에만 보관한다. 포트는 3D 화면에서 부품 표면을 클릭해 정할 수 있고(표면 법선 방향으로 띄움), 현재 포트는 노란 점으로 보인다. `tests/cad.mjs`가 STEP 읽기·회전 배치, STL 블록 사이 자동 배관, 파일 누락 오류를 검사한다.
 
 배관 자동 경로(`generator/router.mjs`)는 축 방향 격자 위 A* 탐색이다. 격자에는 시작·끝 좌표가 항상 포함되며, 연결되지 않은 부품·다른 배관·외함 밖을 피하고 식품 칸(`keepOut`)은 벌점을 주어 되도록 지나지 않는다.
 
@@ -151,7 +151,7 @@ npm run build
 | `tests/piping.mjs` | T-19-HC: 닫힌 회로, 포트 좌표, 길이·관경 |
 | `tests/hr24.mjs` | HR24B: 도면 배치, 압축기 크기, 회로 순서·연결, 관경, 배관 간격, 메쉬 |
 | `tests/templates.mjs` | 형태 템플릿: 기본값과 치수 범위 양 끝 조합, 선반 1·6개, 카탈로그 압축기 12종 모두 검사 통과, 범위 밖 입력·냉매 불일치 거부 |
-| `tests/cad.mjs` | CAD: STEP 읽기와 회전 배치, CAD 부품 포트 사이 자동 배관과 이동 후 재배관, 파일 누락 오류 |
+| `tests/cad.mjs` | CAD: STEP 읽기와 회전 배치, CAD 부품 포트 사이 자동 배관과 이동 후 재배관, 클릭 포트 좌표 변환 왕복, 파일 누락 오류 |
 | `tests/models.mjs` | 생성기: 모든 사양서 생성·검사 통과, 커밋된 결과가 최신인지, T-19-HC 하부 배치, 자동 경로와 부품 이동 시 배관 추종, 잘못된 사양서 8종 거부 |
 
 ## 출처
