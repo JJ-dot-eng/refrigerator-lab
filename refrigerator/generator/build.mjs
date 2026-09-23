@@ -188,8 +188,10 @@ export function build(spec, ctx = {}) {
   const size = all.getSize(V()).toArray().map(round);
   const expect = spec.expect?.overallMm;
   if (expect && ['width', 'depth', 'height'].some((k, i) => Math.abs(size[i] - expect[k]) > .01)) fail.push(`전체 치수 ${size.join('×')} ≠ 기대값 ${expect.width}×${expect.depth}×${expect.height}`);
-  const door = spec.components.find(c => c.id === 'door');
-  const model = {units: 'mm', coordinateSystem: 'X right viewed from front; Y rear; Z up. THREE x=X/1000,y=Z/1000,z=-Y/1000.', doorPivotMm: door?.hinge ?? null, parts: meshes};
+  // Doors: every component with a hinge swings about a vertical axis; swing +1 opens like a right-hinged door.
+  const doors = spec.components.filter(c => Array.isArray(c.hinge)).map(c => ({id: c.id, pivotMm: c.hinge, swing: c.swing ?? (c.hinge[0] >= 0 ? 1 : -1)}));
+  const model = {units: 'mm', coordinateSystem: 'X right viewed from front; Y rear; Z up. THREE x=X/1000,y=Z/1000,z=-Y/1000.',
+    doorPivotMm: doors.find(d => d.id === 'door')?.pivotMm ?? null, doors, parts: meshes};
   const routesOut = {model: spec.meta.model, refrigerant: spec.meta.refrigerant, coordinateBasis: 'mm; front-view right +X, rear +Y, up +Z',
     circuitOrder: routes.map(r => r.id), compressorPorts: hasCircuit ? Object.fromEntries(Object.entries(comps[owner(first)].ports).map(([k, p]) => [k, p.toArray()])) : {},
     routes: routes.map(r => ({id: r.id, name: r.name, outerDiameterMm: r.od, lengthMm: Math.round(length(r.points)), notes: r.notes, points: r.points.map(p => p.toArray().map(round))}))};

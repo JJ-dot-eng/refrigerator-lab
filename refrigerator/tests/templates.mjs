@@ -23,6 +23,14 @@ for (const [id, t] of Object.entries(TEMPLATES)) {
   assert.throws(() => fromTemplate(id, {width: 10}), /폭은\(는\)/);
 }
 assert.throws(() => fromTemplate('igloo', {}), /알 수 없는 형태/);
+// Two-door reach-in: doors hinge on opposite sides and swing opposite ways; top-mount keeps the compressor above the food space.
+{
+  const two = build(fromTemplate('reachin-2door', {})).model;
+  assert.deepEqual(two.doors.map(d => [d.id, Math.sign(d.pivotMm[0]), d.swing]), [['door', 1, 1], ['door_left', -1, -1]]);
+  const top = build(fromTemplate('reachin-top', {}));
+  const zOf = id => top.model.parts.find(p => p.id === id).boundsMm;
+  assert.ok(zOf('compressor').min[2] > zOf('evaporator').max[2], 'top-mount compressor above evaporator');
+}
 
 // Every catalogue compressor fits both layouts at their smallest width (compartment grows if needed).
 for (const [id, t] of Object.entries(TEMPLATES)) for (const c of COMPRESSORS) {

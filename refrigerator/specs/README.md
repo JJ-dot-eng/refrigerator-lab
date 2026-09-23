@@ -33,7 +33,7 @@ npm run generate -- hr24b   # 하나만
 
 모든 부품: `id`(고유), `type`, `name`, 선택 항목 `basis`(`"drawing"` 제조사 자료 / `"typical"` 업계 일반값), `page`(근거 쪽), `notes`, `color`(`"#rrggbb"`), `group`(선택 시 함께 묶을 부품 id).
 
-`id`가 `cabinet`, `door`, `shelves`인 부품은 "외함 투명" 대상이고, `door`에 `hinge: [x, y, z]`가 있으면 문 열기가 됩니다.
+`id`가 `cabinet`, `shelves`이거나 `door`로 시작하는 부품은 "외함 투명" 대상입니다. `hinge: [x, y, z]`가 있는 부품은 문 열기 때 그 축으로 돌고, `swing`(1 또는 -1, 생략하면 힌지가 오른쪽이면 1)으로 여는 방향을 정합니다. 양문형은 `door`와 `door_left`처럼 도어를 둘 둡니다.
 
 ## 부품 종류 (`type`)
 

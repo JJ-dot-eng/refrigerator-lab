@@ -73,7 +73,7 @@ export default function EditorPage(){
  const current=listIndex>=0?spec!.components[listIndex]:circuitIndex>=0?spec!.circuit[circuitIndex]:null;
  const currentPath=listIndex>=0?['components',listIndex]:['circuit',circuitIndex];
  const v=result?.verification;
- const movable=new Set((spec?.components??[]).filter(c=>c.type&&MOVABLE_TYPES.includes(c.type)&&!['cabinet','door'].includes(c.id)).map(c=>c.id));
+ const movable=new Set((spec?.components??[]).filter(c=>c.type&&MOVABLE_TYPES.includes(c.type)&&c.id!=='cabinet'&&!c.id.startsWith('door')).map(c=>c.id));
  const names=Object.fromEntries((spec?.components??[]).map(c=>[c.id,c.name]));
  function moveComponent(id:string,d:[number,number,number]){if(!spec)return;const i=spec.components.findIndex(c=>c.id===id);if(i<0)return;
   try{change(['components',i],translateComponent(spec.components[i],d));}catch(e){setFileError((e as Error).message);}}

@@ -116,51 +116,81 @@ function underCounter(p) {
   };
 }
 
-// ---------- reach-in, bottom-mounted condensing unit (T-19-HC type) ----------
-function reachIn(p) {
+// ---------- reach-in family: condensing unit below (T-19-HC type) or on top, one or two doors ----------
+// The machine deck is laid out from its own floor `base`, so the same rules serve both positions:
+// bottom-mount base = castor height, top-mount base = top of the cabinet minus the deck height.
+function reachIn(p, {top = false, doors = 1} = {}) {
   const W = p.width, D = p.depth, H = p.height, F = p.feet, X = W / 2;
   const comp = compressorParams(findCompressor(p.compressor));
   const yFront = -D / 2, yRear = D / 2, bodyFront = yFront + 50;
-  const cmpTop = Math.max(F + 242.7, F + 9.7 + 18 + comp.shell.height + 27), inBottom = cmpTop + 65, inTop = H - 65, sideIn = X - 45, inRear = yRear - 55;
-  const fins = {x: [-X + 92.9, X - 192.9], y: [yFront + 76, yFront + 116], z: [F + 32.7, cmpTop - 20]};
+  const deckH = Math.max(242.7, 9.7 + 18 + comp.shell.height + 27);
+  const base = top ? H - deckH : F, cmpTop = base + deckH;
+  const inBottom = top ? F + 75 : cmpTop + 65, inTop = top ? base - 65 : H - 65, sideIn = X - 45, inRear = yRear - 55;
+  const doorZ = top ? [F + 10, base - 15] : [cmpTop + 15, H - 55], doorMid = (doorZ[0] + doorZ[1]) / 2;
+  const fx0 = -X + 92.9, fins = {x: [fx0, Math.min(X - 192.9, fx0 + 600)], y: [yFront + 76, yFront + 116], z: [base + 32.7, cmpTop - 20]};
   const rows = Array.from({length: 8}, (_, i) => cmpTop - 35 - i * 23);
   const ccols = [yFront + 106, yFront + 86];
-  const CX = X - 222.9, CY = yRear - 141, floorZ = F + 9.7;
+  const CX = X - 222.9, CY = yRear - 141, floorZ = base + 9.7;
   const suctionStubZ = floorZ + 18 + comp.stubs.find(s => s.port === 'suction').height;
-  const dr = {x: -X + 42.9, y: yFront + 161, zBot: F + 42.7};
-  const eh = Math.min(200, X - 135)  // leaves room for the suction riser at x = -X + 87.9
- , ev = {y: [yRear - 201, yRear - 131], z: [H - 195, H - 80]};
-  const ecols = [yRear - 146, yRear - 186], erows = [H - 95, H - 125, H - 155, H - 185];
+  const dr = {x: -X + 42.9, y: yFront + 161, zBot: base + 42.7};
+  // Evaporator width leaves room for the suction riser at x = -X + 87.9; two doors get a wide coil and two fans.
+  const eh = Math.min(doors === 2 ? 480 : 200, X - 135), ev = {y: [yRear - 201, yRear - 131], z: [inTop - 130, inTop - 15]};
+  const ecols = [yRear - 146, yRear - 186], erows = [inTop - 30, inTop - 60, inTop - 90, inTop - 120];
   const sx = -X + 87.9, hx = sx + 5, hy = yRear - 28;
+  // Capillary joins the suction line: below the cabinet it rises to the evaporator, on top it drops to it.
+  const capJoinZ = top ? base + 30 : cmpTop - 75;
+  const suctionEndZ = top ? Math.max(base + 50, suctionStubZ + 8) : Math.max(cmpTop - 100, suctionStubZ + 8);
   const bump = 11.906;
   const slats = [];
-  for (let z = F + 22.7; z + 8 <= cmpTop; z += 30) slats.push({box: box([-(X - 10), X - 10], [bodyFront - 2, bodyFront], [z, z + 8])});
+  for (let z = base + 22.7; z + 8 <= cmpTop; z += 30) slats.push({box: box([-(X - 10), X - 10], [bodyFront - 2, bodyFront], [z, z + 8])});
+  const shelfZ = top ? [inBottom + (inTop - inBottom) * .25, inTop - (inTop - inBottom) * .22] : [inBottom + 380, inTop - 340];
+  const shelfX = doors === 2 ? [[-(X - 52.4), -8], [8, X - 52.4]] : [[-(X - 52.4), X - 52.4]];
+  const shelfW = shelfX[0][1] - shelfX[0][0];
+  const handle = x => ({name: 'recessed-handle', ...box(x, [yFront - 1, yFront + 15], [doorMid - 100, doorMid + 205])});
+  const doorParts = doors === 2 ? [
+    {id: 'door', type: 'cabinet', name: '오른쪽 도어', basis: 'typical', notes: '오른쪽 힌지, 매립 손잡이.', hinge: pt(X, yFront, 0), swing: 1,
+      body: box([1.5, X - 2], [yFront, bodyFront], doorZ), voids: [handle([12.9, 42.9])]},
+    {id: 'door_left', type: 'cabinet', name: '왼쪽 도어', basis: 'typical', notes: '왼쪽 힌지, 매립 손잡이.', hinge: pt(-X, yFront, 0), swing: -1,
+      body: box([-(X - 2), -1.5], [yFront, bodyFront], doorZ), voids: [handle([-42.9, -12.9])]},
+  ] : [
+    {id: 'door', type: 'cabinet', name: '단열 도어', basis: 'typical', notes: '우측 힌지, 매립 손잡이.', hinge: pt(X, yFront, 0),
+      body: box([-(X - 2), X - 2], [yFront, bodyFront], doorZ), voids: [handle([-(X - 12.9), -(X - 42.9)])]},
+  ];
+  const fanCommon = {basis: 'typical', rpm: 1300, motor: {radius: 25, y: [12, 36]}, brackets: {y: [25, 10], reach: 58}, hub: {radius: 12, y: [-7, 7]},
+    blades: {count: 5, width: 20, thickness: 1.6, length: 44, radius: 33, pitch: .35}};
+  const shroud = x => ({x, y: [8, 10], z: [-73, 72], opening: 58, ring: {radius: 60, length: 10, y: 9}});
+  const evapFans = doors === 2 ? [
+    {id: 'evaporator_fan', type: 'axial-fan', name: '증발기 팬 (왼쪽)', notes: 'Ø110 축류팬.', center: pt(-eh / 2, yRear - 241, inTop - 72), shroud: shroud([-(eh / 2 + 30), eh / 2]), rotor: {name: '증발기 팬 날개'}, ...fanCommon},
+    {id: 'evaporator_fan_2', type: 'axial-fan', name: '증발기 팬 (오른쪽)', notes: 'Ø110 축류팬.', center: pt(eh / 2, yRear - 241, inTop - 72), shroud: shroud([-eh / 2, eh / 2 + 30]), rotor: {name: '증발기 팬 날개'}, ...fanCommon},
+  ] : [
+    {id: 'evaporator_fan', type: 'axial-fan', name: '증발기 팬', notes: 'Ø110 축류팬.', center: pt(0, yRear - 241, inTop - 72), shroud: shroud([-(eh + 30), eh + 30]), rotor: {name: '증발기 팬 날개'}, ...fanCommon},
+  ];
+  const where = top ? '캐비닛 위 기계실' : '하부 기계실';
   return {
     components: [
-      {id: 'cabinet', type: 'cabinet', name: '외함·내함', basis: 'typical', notes: '외형은 입력 치수, 벽 두께와 기계실 높이는 T-19-HC 비율을 따른 추정.',
+      {id: 'cabinet', type: 'cabinet', name: '외함·내함', basis: 'typical', notes: `외형은 입력 치수, 벽 두께와 ${where} 높이는 T-19-HC 비율을 따른 추정.`,
         body: box([-X, X], [bodyFront, yRear], [F, H]),
         voids: [
           {name: 'interior', keepOut: true, ...box([-sideIn, sideIn], [bodyFront - 1, inRear], [inBottom, inTop])},
-          {name: 'machine-compartment', ...box([-(X - 10), X - 10], [bodyFront - 1, yRear + 1], [F + 9.7, cmpTop])},
+          {name: 'machine-compartment', ...box([-(X - 10), X - 10], [bodyFront - 1, yRear + 1], [base + 9.7, top ? H + 1 : cmpTop])},
         ]},
-      {id: 'door', type: 'cabinet', name: '단열 도어', basis: 'typical', notes: '우측 힌지, 매립 손잡이.', hinge: pt(X, yFront, 0),
-        body: box([-(X - 2), X - 2], [yFront, bodyFront], [cmpTop + 15, H - 55]),
-        voids: [{name: 'recessed-handle', ...box([-(X - 12.9), -(X - 42.9)], [yFront - 1, yFront + 15], [(H + F) / 2 - 50, (H + F) / 2 + 255])}]},
-      {id: 'display', type: 'primitives', name: '외부 온도 표시창', group: 'cabinet', color: '#1c2a30', basis: 'typical', notes: '상단 전면.',
-        primitives: [{box: box([-100, 100], [bodyFront - 2, bodyFront], [H - 40, H - 15])}]},
+      ...doorParts,
+      {id: 'display', type: 'primitives', name: '외부 온도 표시창', group: 'cabinet', color: '#1c2a30', basis: 'typical', notes: top ? '도어 위 전면.' : '상단 전면.',
+        primitives: [{box: box([-100, 100], [bodyFront - 2, bodyFront], top ? [base - 13, base + 7] : [H - 40, H - 15])}]},
       {id: 'grille', type: 'primitives', name: '기계실 전면 그릴', group: 'cabinet', color: '#3a4449', basis: 'typical', notes: '흡기 그릴.', primitives: slats},
-      {id: 'shelves', type: 'wire-shelves', name: `선반 ${p.shelves}개`, basis: 'typical', notes: '높이는 고르게 배치.', rod: {outer: 2, inner: 1.2, count: Math.max(8, Math.round((W - 105) / 23.2)), inset: 11},
-        items: shelves(p.shelves, inBottom + 380, inTop - 340, [-(X - 52.4), X - 52.4], yFront + 56, () => inRear - 47.6)},
+      {id: 'shelves', type: 'wire-shelves', name: `선반 ${p.shelves}단${doors === 2 ? ' ×2열' : ''}`, basis: 'typical', notes: '높이는 고르게 배치.',
+        rod: {outer: 2, inner: 1.2, count: Math.max(8, Math.round(shelfW / 23.2)), inset: 11},
+        items: shelfX.flatMap(x => shelves(p.shelves, shelfZ[0], shelfZ[1], x, yFront + 56, () => inRear - 47.6))},
       {id: 'castors', type: 'primitives', name: '캐스터·후면 범퍼', group: 'cabinet', color: '#3a4449', basis: 'typical', notes: `캐스터 높이 ${F}.`,
         primitives: [
           ...[-1, 1].flatMap(s => [yFront + 91, yRear - 51].flatMap(y => [
             {cylinder: {from: pt(s * (X - 42.9) - 12, y, Math.min(32, F / 2)), to: pt(s * (X - 42.9) + 12, y, Math.min(32, F / 2)), radius: Math.min(32, F / 2)}},
             {box: box([s * (X - 42.9) - 15, s * (X - 42.9) + 15], [y - 20, y + 20], [Math.min(50, F - 5), F])}])),
           {box: box([-(X - 42.9), X - 42.9], [yRear, yRear + bump], [150, 180])}, {box: box([-(X - 42.9), X - 42.9], [yRear, yRear + bump], [H - 155, H - 125])}]},
-      {id: 'compressor', type: 'hermetic-compressor', name: '밀폐형 압축기', basis: 'typical', notes: '왕복동 밀폐형 일반 형상.',
+      {id: 'compressor', type: 'hermetic-compressor', name: '밀폐형 압축기', basis: 'typical', notes: '왕복동 밀폐형.',
         model: p.compressor, center: pt(CX, CY), floorZ: r2(floorZ),
         relay: {id: 'start_relay', name: '기동 릴레이', notes: '커버 크기는 일반값.', x: [-10, 60], y: [70, 105], z: [50, 110]}},
-      {id: 'condenser', type: 'fin-tube-coil', name: '응축기 (핀-튜브)', basis: 'typical', notes: '전면 그릴 뒤 핀-튜브 응축기, 2열×8단.', color: '#aab4b8',
+      {id: 'condenser', type: 'fin-tube-coil', name: '응축기 (핀-튜브)', basis: 'typical', notes: `${where} 전면 그릴 뒤 핀-튜브 응축기, 2열×8단.`, color: '#aab4b8',
         fins: {x: fins.x.map(r2), y: fins.y.map(r2), z: fins.z.map(r2), pitch: 3},
         tubes: {od: 9.52, cols: ccols.map(r2), rows: rows.map(r2), bendX: [r2(fins.x[0] - 15), r2(fins.x[1] + 15)], inletX: r2(fins.x[0] - 17), outletX: r2(fins.x[0] - 25), bendRadius: 10}},
       {id: 'condenser_fan', type: 'axial-fan', name: '응축기 팬', basis: 'typical', notes: 'Ø200 축류팬.', center: pt((fins.x[0] + fins.x[1]) / 2, fins.y[1] + 45, (fins.z[0] + fins.z[1]) / 2), rpm: 1500,
@@ -168,14 +198,11 @@ function reachIn(p) {
         motor: {radius: 40, y: [15, 65]}, brackets: {y: [40, -12], reach: 104}, hub: {radius: 20, y: [-10, 10]},
         blades: {count: 4, width: 40, thickness: 2, length: 78, radius: 58, pitch: .4}, rotor: {name: '응축기 팬 날개'}},
       {id: 'drier', type: 'filter-drier', name: '필터 드라이어', basis: 'typical', notes: 'Ø19×100mm 수직.', x: r2(dr.x), y: r2(dr.y), zBot: r2(dr.zBot), zTop: r2(dr.zBot + 100), diameter: 19, inletOd: 6.4, outletOd: 3},
-      {id: 'evaporator', type: 'fin-tube-coil', name: '증발기', basis: 'typical', notes: '천장 핀-튜브 증발기, 2열×4단.',
+      {id: 'evaporator', type: 'fin-tube-coil', name: '증발기', basis: 'typical', notes: `천장 핀-튜브 증발기, 2열×4단${doors === 2 ? ', 2도어용 폭' : ''}.`,
         fins: {x: [-eh, eh], y: ev.y.map(r2), z: ev.z.map(r2), pitch: 6},
         tubes: {od: 9.52, cols: ecols.map(r2), rows: erows.map(r2), bendX: [-(eh + 20), eh + 20], inletX: -(eh + 22), outletX: -(eh + 30), bendRadius: 12},
         dripTray: {name: '증발기 물받이', ...box([-(eh + 25), eh + 25], [ev.y[0] - 10, ev.y[1] + 10], [ev.z[0] - 15, ev.z[0] - 13]), lip: 7}},
-      {id: 'evaporator_fan', type: 'axial-fan', name: '증발기 팬', basis: 'typical', notes: 'Ø110 축류팬.', center: pt(0, yRear - 241, H - 137), rpm: 1300,
-        shroud: {x: [-(eh + 30), eh + 30], y: [8, 10], z: [-73, 72], opening: 58, ring: {radius: 60, length: 10, y: 9}},
-        motor: {radius: 25, y: [12, 36]}, brackets: {y: [25, 10], reach: 58}, hub: {radius: 12, y: [-7, 7]},
-        blades: {count: 5, width: 20, thickness: 1.6, length: 44, radius: 33, pitch: .35}, rotor: {name: '증발기 팬 날개'}},
+      ...evapFans,
     ],
     circuit: [
       {id: 'discharge', name: '토출관', od: 6.35, color: '#c27c4e', bendRadius: 20, notes: '압축기 → 응축기 윗단.',
@@ -186,12 +213,12 @@ function reachIn(p) {
       {id: 'capillary', name: '모세관', od: 2, color: '#d08a5a', bendRadius: 6, notes: '4회 코일 후 뒤로 가서 흡입관에 합류.',
         path: ['drier.out', pt(dr.x, dr.y, dr.zBot - 26), pt(dr.x, dr.y + 55, dr.zBot - 26), pt(dr.x, dr.y + 70, dr.zBot - 5),
           {helix: {center: pt(dr.x + 25, dr.y + 70, dr.zBot + 20), radius: 25, turns: 4, pitch: 3, startDeg: 270, extraDeg: 180, stepsPerTurn: 36}},
-          pt(dr.x + 5, dr.y + 84, dr.zBot + 45), pt(dr.x + 5, dr.y + 84, cmpTop - 75), pt(hx, dr.y + 84, cmpTop - 75), pt(hx, hy, cmpTop - 75)]},
-      {id: 'capillary_hx', name: '모세관·흡입관 열교환부', od: 2, color: '#d08a5a', bendRadius: 6, notes: '흡입관에 붙어 후면 단열재 속을 올라감.',
-        path: [pt(hx, hy, cmpTop - 75), pt(hx, hy, H - 87), pt(hx, ecols[0], H - 87), pt(-(eh + 35), ecols[0], H - 87), pt(-(eh + 35), ecols[0], erows[0]), 'evaporator.in']},
+          pt(dr.x + 5, dr.y + 84, dr.zBot + 45), pt(dr.x + 5, dr.y + 84, capJoinZ), pt(hx, dr.y + 84, capJoinZ), pt(hx, hy, capJoinZ)]},
+      {id: 'capillary_hx', name: '모세관·흡입관 열교환부', od: 2, color: '#d08a5a', bendRadius: 6, notes: top ? '흡입관에 붙어 천장 단열재를 지나 증발기로 내려감.' : '흡입관에 붙어 후면 단열재 속을 올라감.',
+        path: [pt(hx, hy, capJoinZ), pt(hx, hy, inTop - 22), pt(hx, ecols[0], inTop - 22), pt(-(eh + 35), ecols[0], inTop - 22), pt(-(eh + 35), ecols[0], erows[0]), 'evaporator.in']},
       {id: 'evaporator', name: '증발관', od: 9.52, color: '#d08a5a', notes: '2열×4단 사행.', path: [{component: 'evaporator'}]},
-      {id: 'suction', name: '흡입관', od: 7.94, color: '#d08a5a', bendRadius: 25, notes: '후면 단열재 속 수직 하강 → 압축기.',
-        path: ['evaporator.out', pt(sx, ecols[1], erows[0]), pt(sx, hy, erows[0]), pt(sx, hy, Math.max(cmpTop - 100, suctionStubZ + 8)), {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']},
+      {id: 'suction', name: '흡입관', od: 7.94, color: '#d08a5a', bendRadius: 25, notes: top ? '천장 단열재를 지나 기계실로 올라감 → 압축기.' : '후면 단열재 속 수직 하강 → 압축기.',
+        path: ['evaporator.out', pt(sx, ecols[1], erows[0]), pt(sx, hy, erows[0]), pt(sx, hy, suctionEndZ), {auto: {}}, {port: 'compressor.suction', offset: [-25, 0, 0]}, 'compressor.suction']},
     ],
     checks: {minClearanceMm: 1, joinExclusionMm: 30, touching: [['capillary', 'suction'], ['capillary_hx', 'suction']]},
     overall: {width: W, depth: D + bump, height: H},
@@ -221,6 +248,30 @@ export const TEMPLATES = {
       {key: 'height', label: '높이 (캐스터 포함)', unit: 'mm', min: 1700, max: 2200, default: 2005},
       {key: 'feet', label: '캐스터 높이', unit: 'mm', min: 60, max: 160, default: 87.3},
       ...COMMON_PARAMS.map(q => q.key === 'refrigerant' ? {...q, default: 'R290'} : q.key === 'shelves' ? {...q, default: 3} : q.key === 'compressor' ? {...q, default: 'typical-r290-medium'} : q),
+    ],
+  },
+  'reachin-top': {
+    name: '리치인 · 상부 응축 유닛',
+    summary: '서서 쓰는 1도어 리치인. 캐비닛 위 기계실에 압축기·핀-튜브 응축기·팬이 있고, 모세관과 흡입관이 천장을 지나 증발기로 이어짐.',
+    build: p => reachIn(p, {top: true}),
+    params: [
+      {key: 'width', label: '폭', unit: 'mm', min: 600, max: 800, default: 685.8},
+      {key: 'depth', label: '깊이 (도어 포함, 범퍼 제외)', unit: 'mm', min: 560, max: 820, default: 622.3},
+      {key: 'height', label: '높이 (캐스터·상부 기계실 포함)', unit: 'mm', min: 1800, max: 2300, default: 2080},
+      {key: 'feet', label: '캐스터 높이', unit: 'mm', min: 60, max: 160, default: 87.3},
+      ...COMMON_PARAMS.map(q => q.key === 'refrigerant' ? {...q, default: 'R290'} : q.key === 'shelves' ? {...q, default: 4} : q.key === 'compressor' ? {...q, default: 'typical-r290-medium'} : q),
+    ],
+  },
+  'reachin-2door': {
+    name: '리치인 2도어 · 하부 응축 유닛',
+    summary: '양문형 리치인. 좌우 도어, 두 열 선반, 넓은 천장 증발기와 팬 2개, 하부 기계실의 핀-튜브 응축기.',
+    build: p => reachIn(p, {doors: 2}),
+    params: [
+      {key: 'width', label: '폭', unit: 'mm', min: 1100, max: 1500, default: 1370},
+      {key: 'depth', label: '깊이 (도어 포함, 범퍼 제외)', unit: 'mm', min: 600, max: 850, default: 750},
+      {key: 'height', label: '높이 (캐스터 포함)', unit: 'mm', min: 1700, max: 2200, default: 2005},
+      {key: 'feet', label: '캐스터 높이', unit: 'mm', min: 60, max: 160, default: 87.3},
+      ...COMMON_PARAMS.map(q => q.key === 'refrigerant' ? {...q, default: 'R290'} : q.key === 'shelves' ? {...q, label: '선반 단 수 (열마다)', default: 3} : q.key === 'compressor' ? {...q, default: 'embraco-neu2155u'} : q),
     ],
   },
 };
