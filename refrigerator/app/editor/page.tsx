@@ -7,6 +7,8 @@ import ModelScene,{type SceneData} from '@/components/model-scene';
 import {build,toObj} from '@/generator/build.mjs';
 import {asset} from '@/lib/asset';
 import {Fields,type Change} from './fields';
+import DrawingView from './drawing';
+import {translateComponent,MOVABLE_TYPES} from '@/generator/transform.mjs';
 import {WIZARD_KEY,WIZARD_BASE,draftKey} from '@/lib/storage-keys';
 import '../hr24/style.css';
 import './editor.css';
@@ -25,7 +27,7 @@ export default function EditorPage(){
  const [index,setIndex]=useState<{id:string;model:string}[]>([]),[baseId,setBaseId]=useState('');
  const [original,setOriginal]=useState<Spec|null>(null),[spec,setSpec]=useState<Spec|null>(null),[history,setHistory]=useState<Spec[]>([]);
  const [result,setResult]=useState<Result|null>(null),[scene,setScene]=useState<SceneData|null>(null),[restored,setRestored]=useState(false),[specBase,setSpecBase]=useState('');
- const [selected,setSelected]=useState('compressor'),[view,setView]=useState('rear'),[transparent,setTransparent]=useState(true),[flow,setFlow]=useState(false),[door,setDoor]=useState(false);
+ const [selected,setSelected]=useState('compressor'),[view,setView]=useState('rear'),[transparent,setTransparent]=useState(true),[flow,setFlow]=useState(false),[door,setDoor]=useState(false),[pane,setPane]=useState<'3d'|'2d'>('3d');
  const [rawDraft,setRawDraft]=useState<string|null>(null),[rawError,setRawError]=useState(''),[fileError,setFileError]=useState('');
  const fileInput=useRef<HTMLInputElement>(null);
  useEffect(()=>{fetch(asset('/models/index.json')).then(r=>r.json() as Promise<{models:{id:string;model:string}[]}>).then(d=>{
@@ -57,6 +59,10 @@ export default function EditorPage(){
  const current=listIndex>=0?spec!.components[listIndex]:circuitIndex>=0?spec!.circuit[circuitIndex]:null;
  const currentPath=listIndex>=0?['components',listIndex]:['circuit',circuitIndex];
  const v=result?.verification;
+ const movable=new Set((spec?.components??[]).filter(c=>c.type&&MOVABLE_TYPES.includes(c.type)&&!['cabinet','door'].includes(c.id)).map(c=>c.id));
+ const names=Object.fromEntries((spec?.components??[]).map(c=>[c.id,c.name]));
+ function moveComponent(id:string,d:[number,number,number]){if(!spec)return;const i=spec.components.findIndex(c=>c.id===id);if(i<0)return;
+  try{change(['components',i],translateComponent(spec.components[i],d));}catch(e){setFileError((e as Error).message);}}
  async function upload(file:File){setFileError('');try{const s=JSON.parse(await file.text()) as Spec;
   if(s?.schema!=='refrigerator-spec/1')throw Error('schema가 "refrigerator-spec/1"이 아닙니다');setHistory(h=>spec?[...h.slice(-49),spec]:h);setSpec(s);setRestored(false);}
   catch(e){setFileError(`불러오기 실패: ${(e as Error).message}`);}}
@@ -72,7 +78,9 @@ export default function EditorPage(){
   <h2 style={{marginTop:20}}>냉매 회로</h2>{items.filter(i=>i.kind==='circuit').map((i,n)=><button key={i.id} className={selected===i.id?'active':''} onClick={()=>setSelected(i.id)}><span>{String(n+1).padStart(2,'0')}</span>{bad.has(i.id)&&<i className="ed-bad" title="검사 문제"/>}{i.name}</button>)}
  </aside>
  <section className="hr-model"><div className="hr-tools"><select aria-label="시점" value={view} onChange={e=>setView(e.target.value)}><option value="rear">후면 입체</option><option value="back">후면 정면</option><option value="front">전면 입체</option><option value="left">좌측면</option><option value="machine">기계실 확대</option></select><button className={transparent?'active':''} onClick={()=>setTransparent(!transparent)}>외함 투명</button><button onClick={()=>setDoor(!door)}>문 {door?'닫기':'열기'}</button><button onClick={()=>setFlow(!flow)} className={flow?'active':''}>운전 표시</button><button onClick={undo} disabled={!history.length}>되돌리기</button></div>
-  <ModelScene data={scene} fitKey={baseId} selected={selected} onSelect={id=>{if(spec&&[...spec.components,...spec.circuit].some(c=>c.id===id))setSelected(id);}} view={view} transparent={transparent} flow={flow} door={door}/>
+  <div className="hr-tools ed-pane"><button className={pane==='3d'?'active':''} onClick={()=>setPane('3d')}>3D</button><button className={pane==='2d'?'active':''} onClick={()=>setPane('2d')}>도면 맞춤 (2D)</button></div>
+  {pane==='3d'?<ModelScene data={scene} fitKey={baseId} selected={selected} onSelect={id=>{if(spec&&[...spec.components,...spec.circuit].some(c=>c.id===id))setSelected(id);}} view={view} transparent={transparent} flow={flow} door={door}/>
+  :<DrawingView model={scene?.model??null} routes={scene?.routes??null} movable={movable} names={names} bad={bad} selected={selected} onSelect={id=>{if(spec&&[...spec.components,...spec.circuit].some(c=>c.id===id))setSelected(id);}} onMove={moveComponent}/>}
   <div className="ed-editor">{current?<><h2>{current.name} <small>{String(current.type??'냉매 배관')} · {current.id}</small></h2>
    {typeof current.notes==='string'&&<p className="ed-desc">{current.notes}</p>}
    <Fields value={current} path={currentPath} onChange={change} pathList={circuitIndex>=0}/>

@@ -54,7 +54,7 @@ export function hermeticCompressor(c) {
   for (const s of c.stubs) {
     const h = s.height, rr = radiusAt(h), half = rr * Math.sqrt(Math.max(0, 1 - (s.dy / (rr * ell)) ** 2));
     const surface = cx - half, z = shellBase + h, r = s.od / 2;
-    const inner = V(surface + 10, cy + s.dy, z), tip = V(Math.round(surface - (s.length ?? 25)), cy + s.dy, z);
+    const inner = V(surface + 10, cy + s.dy, z), tip = V(Math.round((surface - (s.length ?? 25)) * 100) / 100, cy + s.dy, z);
     ports[s.port] = tip;
     stubGeo.push(cyl(inner, tip, r));
     if (s.crimp) stubGeo.push(box(tip.x - 6, tip.x, tip.y - 4.5, tip.y + 4.5, tip.z - 1, tip.z + 1));

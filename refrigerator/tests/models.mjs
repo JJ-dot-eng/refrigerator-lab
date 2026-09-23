@@ -72,4 +72,24 @@ assert.match(build(bad).errors.join('\n'), /배관 허용 영역 밖/);
 bad = clone(); setPath(bad, 'suction', [{auto: {}}, 'compressor.suction']);
 assert.match(validate(bad).join('\n'), /처음이나 끝에 올 수 없습니다/);
 
-console.log(`Models: ${ids.length} specs build with closed circuits and no interference, outputs up to date, T-19-HC bottom-mount placement, auto routing (T-19-HC, HR24B, moved compressor), 8 broken-spec cases rejected.`);
+// Moving any component moves every mesh it produces by exactly that offset.
+{
+  const {translateComponent, MOVABLE_TYPES} = await import('../generator/transform.mjs');
+  const d = [12.5, -7, 30];
+  for (const specId of ids) {
+    const spec = load(specId), before = build(spec).model.parts;
+    for (const c of spec.components) {
+      assert.ok(MOVABLE_TYPES.includes(c.type), c.type);
+      const moved = {...spec, components: spec.components.map(x => x === c ? translateComponent(c, d) : x)};
+      const after = build(moved).model.parts;
+      const compIds = new Set(spec.components.map(x => x.id));
+      const own = p => p.kind !== 'pipe' && (p.id === c.id || (!compIds.has(p.id) && p.group === c.id));
+      for (const p of before.filter(own)) {
+        const q = after.find(x => x.id === p.id);
+        p.boundsMm.min.forEach((v, i) => assert.ok(Math.abs(q.boundsMm.min[i] - v - d[i]) < .02, `${specId}/${p.id} moved by d`));
+      }
+    }
+  }
+}
+
+console.log(`Models: ${ids.length} specs build with closed circuits and no interference, outputs up to date, T-19-HC bottom-mount placement, auto routing (T-19-HC, HR24B, moved compressor), every component type moves exactly, 8 broken-spec cases rejected.`);
