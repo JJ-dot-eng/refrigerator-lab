@@ -10,8 +10,11 @@ import type {DetailedTable} from '@/lib/circuit';
 import {asset} from '@/lib/asset';
 type Run={id:string;name:string;outerDiameterMm:number;lengthMm:number;notes?:string};
 const MODEL='/models/t-19-hc';
-export default function RefrigerantCircuit({ambient}:{ambient:number}){
- const [data,setData]=useState<{table:DetailedTable;runs:Run[]}|null>(null),[error,setError]=useState(''),[selected,setSelected]=useState('discharge'),[flow,setFlow]=useState(true),[view,setView]=useState('rear'),[shell,setShell]=useState(true),[sample,setSample]=useState(0);
+const STEP_IDS=new Set(t19Steps(.5).map(s=>s.id));
+// focus: part picked in the page's parts list; parts that are also a step here (compressor, condenser, evaporator) select that step.
+export default function RefrigerantCircuit({ambient,focus}:{ambient:number;focus?:string}){
+ const [data,setData]=useState<{table:DetailedTable;runs:Run[]}|null>(null),[error,setError]=useState(''),[selected,setSelected]=useState(()=>focus&&STEP_IDS.has(focus)?focus:'discharge'),[seenFocus,setSeenFocus]=useState(focus),[flow,setFlow]=useState(true),[view,setView]=useState('rear'),[shell,setShell]=useState(true),[sample,setSample]=useState(0);
+ if(focus!==seenFocus){setSeenFocus(focus);if(focus&&STEP_IDS.has(focus)){setSelected(focus);setSample(0);}}
  useEffect(()=>{Promise.all([fetch(asset('/reference/cycle-table.json')).then(r=>{if(!r.ok)throw Error();return r.json() as Promise<DetailedTable>;}),fetch(asset(`${MODEL}/routes.json`)).then(r=>{if(!r.ok)throw Error();return r.json() as Promise<{routes:Run[]}>;})])
   .then(([table,routes])=>{if(!table.points[0]?.circuit)throw Error();setData({table,runs:routes.routes});}).catch(()=>setError('냉매 회로 데이터를 불러오지 못했습니다.'));},[]);
  if(error)return <p role="alert">{error}</p>;if(!data)return <p className="circuit-loading">냉매 상태와 배관 읽는 중…</p>;
